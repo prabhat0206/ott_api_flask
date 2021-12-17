@@ -1,85 +1,106 @@
 from flask import Blueprint, jsonify, request, send_file
 from .models import *
 from . import db, get_model_dict, permission_required, UPLOAD_MOV
+import random
 
 product_api = Blueprint('product_api', __name__)
 
 
-@product_api.route('/api/getLatest/limit/<limit>', methods=['POST'])
-@product_api.route('/api/getLatest/limit/<limit>/', methods=['POST'])
-def get_Latest(limit):
-    movies = Movie.query.with_entities(
-        Movie.mid,
-        Movie.name,
-        Movie.image_url
-    ).filter(Movie.Type != 'Episode').order_by(Movie.date.desc()).limit(int(limit))
-    movies = db.session.execute(movies).all()
-    web_series = Web_series.query.with_entities(
-        Web_series.wsid,
-        Web_series.name,
-        Web_series.image_url
-    ).order_by(Web_series.date.desc()).limit(int(limit))
-    web_series = db.session.execute(web_series).all()
-    result_data = []
+@product_api.route('/api/getLatest/<int:pagesize>/<int:pageno>/', methods=['POST'])
+@product_api.route('/api/getLatest/<int:pagesize>/<int:pageno>', methods=['POST'])
+def get_Latest(pagesize, pageno):
+    movies = Movie.query.order_by(Movie.date.desc()).filter(Movie.Type != 'Episode').paginate( pageno,pagesize, False).items
+    # movies = db.session.execute(movies).all()
+    web_series = Web_series.query.order_by(Web_series.wsid.desc()).paginate( pageno,pagesize, True).items
+    # web_series = db.session.execute(web_series).all()
+    movies_data = []
+    web_series_data = []
     if len(movies) > 0 or len(web_series) > 0:
         for movie in movies:
-            result_data.append(
+            movies_data.append(
                 {
-                    "mid": movie[0],
-                    "name": movie[1],
-                    "image_url": movie[2]
+                    "mid": movie.mid,
+                    "name": movie.name,
+                    "image_url": movie.image_url,
                 }
-            ) # hgju
+            )
         for series in web_series:
-            result_data.append(
+            web_series_data.append(
                 {
-                    "wsid": series[0],
-                    "name": series[1],
-                    "image_url": series[2]
+                    "wsid": series.wsid,
+                    "name": series.name,
+                    "image_url": series.image_url,
                 }
             )  
-        return jsonify({"success": True, 'Movies':result_data})
+        return jsonify({"success": True, 'Movies':movies_data, "Web_Series": web_series_data})
     else:
         return jsonify({"success": False})
 
 
-@product_api.route('/api/getOrignals/limit/<limit>', methods=['POST'])
-@product_api.route('/api/getOrignals/limit/<limit>/', methods=['POST'])
-def get_Orignals(limit):
-    movies = Movie.query.with_entities(
-        Movie.mid,
-        Movie.name,
-        Movie.image_url
-    ).filter(Movie.Type != 'Episode', Movie.orignal == 1).order_by(Movie.date.desc()).limit(int(limit))
-    movies = db.session.execute(movies).all()
-    web_series = Web_series.query.with_entities(
-        Web_series.wsid,
-        Web_series.name,
-        Web_series.image_url
-    ).filter(Web_series.orignal == 1).order_by(Web_series.date.desc()).limit(int(limit))
-    web_series = db.session.execute(web_series).all()
+@product_api.route('/api/getOrignals/<int:pagesize>/<int:pageno>/', methods=['POST'])
+@product_api.route('/api/getOrignals/<int:pagesize>/<int:pageno>', methods=['POST'])
+def get_Orignals(pagesize, pageno):
+    movies = Movie.query.filter(Movie.Type != 'Episode', Movie.orignal == 1).order_by(Movie.date.desc()).paginate( pageno, pagesize, False ).items
+    # movies = db.session.execute(movies).all()
+    web_series = Web_series.query.filter(Web_series.orignal == 1).order_by(Web_series.date.desc()).paginate( pageno, pagesize, False).items
+    # web_series = db.session.execute(web_series).all()
     result_movies = []
     result_web_series = []
     if len(movies) > 0 or len(web_series) > 0:
         for movie in movies:
             result_movies.append(
                 {
-                    "mid": movie[0],
-                    "name": movie[1],
-                    "image_url": movie[2]
+                    "mid": movie.mid,
+                    "name": movie.name,
+                    "image_url": movie.image_url
                 }
             )
         for series in web_series:
             result_web_series.append(
                 {
-                    "wsid": series[0],
-                    "name": series[1],
-                    "image_url": series[2]
+                    "wsid": series.wsid,
+                    "name": series.name,
+                    "image_url": series.image_url
                 }
             )
         return jsonify({"success": True, 'Orignal_Movies': result_movies, 'Orignal_Web_series': result_web_series})
     else:
         return jsonify({"success": False})
+
+
+@product_api.post('/api/getMovies/<int:pagesize>/<int:pageno>')
+def getMovies(pagesize=12, pageno=1):
+    moviesPages = Movie.query.order_by(Movie.mid.desc()).paginate(pageno, pagesize, True).items
+    movies = []
+    if len(moviesPages) > 0:
+        for movie in moviesPages:
+            movies.append(
+                {
+                    "mid": movie.mid,
+                    "name": movie.name,
+                    "image_url": movie.image_url,
+                }
+            )
+        return jsonify({"success": True, 'movies': movies})
+    return jsonify({"success": False})
+
+
+@product_api.post('/api/getWebSeries/<int:pagesize>/<int:pageno>')
+def getWebSeries(pagesize=12, pageno=1):
+    web_series_page = Web_series.query.order_by(Web_series.wsid.desc()).paginate(pageno, pagesize, False).items
+    web_series = []
+    if  len(web_series_page) > 0:
+        
+        for series in web_series_page:
+            web_series.append(
+                {
+                    "wsid": series.wsid,
+                    "name": series.name,
+                    "image_url": series.image_url,
+                }
+            )
+        return jsonify({"success": True, 'web_series': web_series})
+    return jsonify({"success": False})
 
 
 @product_api.route('/api/getWeb_series/', methods=['POST'])
