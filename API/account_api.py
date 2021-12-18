@@ -123,7 +123,7 @@ def edit_password():
         return jsonify({"success": False, 'error': 'Email is not registered  with us.'})
 
 
-@account_api.post('/api/editUserDetails')
+@account_api.post('/api/updateUserDetails')
 @auth.login_required()
 def editUserDetails():
     data = request.get_json()
