@@ -117,9 +117,10 @@ def get_Web_series():
                 all_details[season.name][ep.name] = {
                     'mid': ep.mid,
                     'name': ep.name,
-                    'image_url': ep.image_url
+                    'image_url': ep.image_url,
+                    "type": ep.Type,
                 }
-        return jsonify({"success": True, 'Movie': all_details})
+        return jsonify({"success": True, 'WebSeries': all_details})
     else:
         return jsonify({'success': False})
 

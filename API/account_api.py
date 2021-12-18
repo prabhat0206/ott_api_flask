@@ -123,6 +123,30 @@ def edit_password():
         return jsonify({"success": False, 'error': 'Email is not registered  with us.'})
 
 
+@account_api.post('/api/editUserDetails')
+@auth.login_required()
+def editUserDetails():
+    data = request.get_json()
+    user = User_table.query.filter_by(uid=auth.current_user()).first()
+    user.full_name = data['full_name']
+    user.Gender = data['Gender']
+    user.DOB = data['DOB']
+    db.session.commit()
+    return jsonify({'success': True, "message": "User successfully updated"})
+
+
+@account_api.post("/api/updatePhnumber")
+@auth.login_required()
+def updatePhnumber():
+    data = request.get_json()
+    user = User_table.query.filter_by(uid=auth.current_user()).first()
+    if "+" in data['Ph_number']:
+        user.Ph_number = str(data['Ph_number'])
+        db.session.commit()
+        return jsonify({"success" : True, "message": "Phone number is updated successfully"})
+    return jsonify({"success" : False, "message": "Phone number is not valid"})
+
+
 @account_api.route('/api/getuserdetails/', methods=['POST'])
 @account_api.route('/api/getuserdetails', methods=['POST'])
 @auth.login_required()

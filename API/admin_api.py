@@ -371,7 +371,7 @@ def add_Season():
                 name = data['name']
                 wsid = data['wsid']
                 date = datetime.now()
-                web_series = Web_series.query.filter_by(wsid).first()
+                web_series = Web_series.query.filter_by(wsid=wsid).first()
                 if web_series:
                     season = Season(
                         name=name,
