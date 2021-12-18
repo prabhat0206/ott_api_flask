@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from .models import User_table, Movie
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db, get_model_dict, auth, client
@@ -15,55 +15,57 @@ def register():
     password = data['password']
     Gender = data['Gender']
 
-    if 'email' in data:
-        email = data['email']
-        user = User_table.query.filter_by(email=email).first()
-        if user:
-            return jsonify({"success": False, 'error': 'Email already exists, Try to Login.'})
-        elif "@" not in email:
-            return jsonify({"success": False, 'error': 'Enter a valid Email'})
-        razorpay_data = {
-            'name': full_name,
-            'email': email
-        }
-        response = client.customer.create(data=razorpay_data)
-        new_user = User_table(
-            email=email,
-            full_name=full_name,
-            password=generate_password_hash(
-                password, method='sha256'),
-            DOB=dob,
-            Gender=Gender,
-            razorpay_id=response['id']
-        )
-        db.session.add(new_user)
-        db.session.commit()
-    if 'Ph_number' in data:
-        Ph_number = data['Ph_number']
-        user_number = User_table.query.filter_by(Ph_number=Ph_number).first()
-        if user_number:
-            return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
-        elif "+" not in Ph_number:
-            return jsonify({"success": False, 'error': 'Enter phone number with country code'})
-        razorpay_data = {
-            'name': full_name,
-            'contact': Ph_number,
-        }
-        response = client.customer.create(data=razorpay_data)
+    # if 'email' in data:
+    #     email = data['email']
+    #     user = User_table.query.filter_by(email=email).first()
+    #     if user:
+    #         return jsonify({"success": False, 'error': 'Email already exists, Try to Login.'})
+    #     elif "@" not in email:
+    #         return jsonify({"success": False, 'error': 'Enter a valid Email'})
+    #     razorpay_data = {
+    #         'name': full_name,
+    #         'email': email
+    #     }
+    #     response = client.customer.create(data=razorpay_data)
+    #     new_user = User_table(
+    #         email=email,
+    #         full_name=full_name,
+    #         password=generate_password_hash(
+    #             password, method='sha256'),
+    #         DOB=dob,
+    #         Gender=Gender,
+    #         razorpay_id=response['id']
+    #     )
+    #     db.session.add(new_user)
+    #     db.session.commit()
+    try:
+        if 'Ph_number' in data:
+            Ph_number = data['Ph_number']
+            user_number = User_table.query.filter_by(Ph_number=Ph_number).first()
+            if user_number:
+                return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
+            elif "+" not in Ph_number:
+                return jsonify({"success": False, 'error': 'Enter phone number with country code'})
+            razorpay_data = {
+                'name': full_name,
+                'contact': Ph_number,
+            }
+            response = client.customer.create(data=razorpay_data)
 
-        new_user = User_table(
-            password=generate_password_hash(
-                password, method='sha256'),
-            Ph_number=Ph_number,
-            DOB=dob,
-            Gender=Gender,
-            membership='Free',
-            razorpay_id=response['id']
-        )
-        db.session.add(new_user)
-        db.session.commit()
-
-    return jsonify({"success": True, "sha": new_user.password, "user_id": new_user.uid})
+            new_user = User_table(
+                password=generate_password_hash(
+                    password, method='sha256'),
+                Ph_number=Ph_number,
+                DOB=dob,
+                Gender=Gender,
+                membership='Free',
+                razorpay_id=response['id']
+            )
+            db.session.add(new_user)
+            db.session.commit()
+        return jsonify({"success": True, "sha": new_user.password, "user_id": new_user.uid})
+    except Exception:
+        abort(500)
 
 
 @account_api.route('/api/login/', methods=['POST'])
@@ -74,12 +76,9 @@ def login():
     if 'Ph_number' in data:
         Ph_number = data['Ph_number']
         user = User_table.query.filter_by(Ph_number=Ph_number).first()
-    elif 'email' in data:
-        email = data['email']
-        user = User_table.query.filter_by(email=email).first()
 
     if not user:
-        return jsonify({"success": False, 'error': 'Email/Username is not registered with us.'})
+        return jsonify({"success": False, 'error': 'Phone number is not registered with us.'})
 
     if check_password_hash(user.password, password):
         return jsonify({"success": True, "sha": user.password, "user_id": user.uid})
@@ -186,3 +185,24 @@ def addToWatchlist():
             return jsonify({"success": True, "message": "Movie added successfully"})
         return jsonify({"success": False, "message": "Movie already in watchlist"})
     return jsonify({"success": False, "message": "Movie or User not exist"})
+
+
+@account_api.post("/api/forgetPassword")
+def forgetPassword():
+    try:
+        if request.headers['Authorization'] == "e8093cbc1686fa7d876e950047b66d230c9855ce5f52e2398c299bc10b1e1ca1":
+            data = request.get_json()
+            password = data['password']
+            confirm_password = data['confirm_password']
+            if password == confirm_password:
+                user = User_table.query.filter_by(Ph_number=data['Ph_number']).first()
+                user.password = generate_password_hash(password, method='sha256')
+                db.session.commit()
+                return jsonify({'success': True, "message": "Password changed successfully"})
+            else:
+                return jsonify({"success": False, 'error': 'password not matching'})
+        else:
+            abort(401)
+    except:
+        abort(401)
+

@@ -18,7 +18,7 @@ UPLOAD_MOV = './UPLOADS'
 app.config["UPLOAD_IMG"] = UPLOAD_IMG
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///'+DB_NAME
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://vkjgwkybkeokwx:01f31e64d8c35f4ec06a7e3efd210af4bcacfb697cef829d6474011f96e6a383@ec2-54-159-107-189.compute-1.amazonaws.com:5432/d7glihdfmkm190'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 
