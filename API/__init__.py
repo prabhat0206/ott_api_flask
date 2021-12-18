@@ -1,5 +1,5 @@
 from flask import Flask, abort
-from flask_httpauth import HTTPBasicAuth
+from flask_httpauth import HTTPTokenAuth
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from functools import wraps
@@ -15,6 +15,7 @@ app.secret_key = 'topsecret'
 UPLOAD_IMG = './static/'
 UPLOAD_MOV = './UPLOADS'
 
+
 app.config["UPLOAD_IMG"] = UPLOAD_IMG
 
 
@@ -23,7 +24,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
-auth = HTTPBasicAuth()
+auth = HTTPTokenAuth(scheme="Bearer")
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 db.init_app(app)
@@ -68,12 +69,14 @@ if not path.exists('API/' + DB_NAME):
     db.create_all(app=app)
 
 
-@auth.verify_password
-def verify(username, password):
-    user = User_table.query.filter_by(uid=username).first()
+@auth.verify_token
+def verify_token(token):
+    user_id = token.split(":")[0]
+    password = token.split(":")[1]
+    user = User_table.query.filter_by(uid=user_id).first()
     if user:
         if user.password == password:
-            return True
+            return user.uid
     return False
 
 
