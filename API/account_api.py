@@ -38,34 +38,32 @@ def register():
     #     )
     #     db.session.add(new_user)
     #     db.session.commit()
-    try:
-        if 'Ph_number' in data:
-            Ph_number = data['Ph_number']
-            user_number = User_table.query.filter_by(Ph_number=Ph_number).first()
-            if user_number:
-                return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
-            elif "+" not in Ph_number:
-                return jsonify({"success": False, 'error': 'Enter phone number with country code'})
-            razorpay_data = {
-                'name': full_name,
-                'contact': Ph_number,
-            }
-            response = client.customer.create(data=razorpay_data)
+    if 'Ph_number' in data:
+        Ph_number = data['Ph_number']
+        user_number = User_table.query.filter_by(Ph_number=Ph_number).first()
+        if user_number:
+            return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
+        elif "+" not in Ph_number:
+            return jsonify({"success": False, 'error': 'Enter phone number with country code'})
+        razorpay_data = {
+            'name': full_name,
+            'contact': Ph_number,
+        }
+        response = client.customer.create(data=razorpay_data)
 
-            new_user = User_table(
-                password=generate_password_hash(
-                    password, method='sha256'),
-                Ph_number=Ph_number,
-                DOB=dob,
-                Gender=Gender,
-                membership='Free',
-                razorpay_id=response['id']
-            )
-            db.session.add(new_user)
-            db.session.commit()
-        return jsonify({"success": True, "sha": new_user.password, "user_id": new_user.uid})
-    except Exception:
-        abort(500)
+        new_user = User_table(
+            password=generate_password_hash(
+                password, method='sha256'),
+            Ph_number=Ph_number,
+            DOB=dob,
+            Gender=Gender,
+            membership='Free',
+            razorpay_id=response['id']
+        )
+        db.session.add(new_user)
+        db.session.commit()
+    return jsonify({"success": True, "sha": new_user.password, "user_id": new_user.uid})
+    
 
 
 @account_api.route('/api/login/', methods=['POST'])
@@ -195,6 +193,7 @@ def removeFromWatchlist():
             return jsonify({'success': True, "message": "Removed movie from watchlist"})
         return jsonify({'success': False, "message": "movie not in watchlist"})
     return jsonify({'success': False, "message": "user or movie not exist"})
+
 
 @account_api.post("/api/addToWatchlist")
 @auth.login_required()
