@@ -112,15 +112,17 @@ def get_Web_series():
     ws = Web_series.query.filter_by(wsid=wsid).first()
     if ws:
         all_details = get_model_dict(ws)
+        all_details['season'] = []
         for season in ws.sid:
-            all_details[season.name] = {}
+            all_episodes = []
             for ep in season.mid:
-                all_details[season.name][ep.name] = {
+                all_episodes.append({
                     'mid': ep.mid,
                     'name': ep.name,
                     'image_url': ep.image_url,
                     "type": ep.Type,
-                }
+                })
+            all_details['season'].append(all_episodes)
         return jsonify({"success": True, 'WebSeries': all_details})
     else:
         return jsonify({'success': False})
