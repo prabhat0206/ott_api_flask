@@ -45,11 +45,12 @@ def register():
             return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
         elif "+" not in Ph_number:
             return jsonify({"success": False, 'error': 'Enter phone number with country code'})
-        razorpay_data = {
-            'name': full_name,
-            'contact': Ph_number,
-        }
-        response = client.customer.create(data=razorpay_data)
+        # razorpay_data = {
+        #     'name': full_name,
+        #     'contact': Ph_number,
+        # }
+        # response = client.customer.create(data=razorpay_data)
+        response = {"id": ""}
 
         new_user = User_table(
             password=generate_password_hash(
