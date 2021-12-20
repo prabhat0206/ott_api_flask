@@ -183,8 +183,7 @@ def getWatchlist():
                 "wsid": watchlist.wsid,
                 "image_url": watchlist.image_url,
                 "name": watchlist.name,
-                "description": watchlist.description,
-                "language": watchlist.language
+                "description": watchlist.description
             })
         return jsonify({'success': True, "movies": all_watchlist, "wed_series": all_watchlist_web})
     return jsonify({'success': False})
@@ -234,7 +233,7 @@ def addToWatchlist():
                 user.watchlist_web.append(web_series)
                 db.session.commit()
                 return jsonify({"success": True, "message": "Web_series added successfully"})
-            return jsonify({"success": False, "message": "Movie already in watchlist"})
+            return jsonify({"success": False, "message": "Web Series already in watchlist"})
     return jsonify({"success": False, "message": "Movie or User not exist"})
 
 
