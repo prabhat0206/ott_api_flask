@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, abort
-from .models import User_table, Movie
+from .models import User_table, Movie, Web_series
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db, get_model_dict, auth, client
 
@@ -177,7 +177,16 @@ def getWatchlist():
             watch['description'] = watchlist.description
             watch['language'] = watchlist.Language
             all_watchlist.append(watch)
-        return jsonify({'success': True, "movies": all_watchlist})
+        all_watchlist_web = []
+        for watchlist in user.watchlist_web:
+            all_watchlist_web.append({
+                "wsid": watchlist.wsid,
+                "image_url": watchlist.image_url,
+                "name": watchlist.name,
+                "description": watchlist.description,
+                "language": watchlist.language
+            })
+        return jsonify({'success': True, "movies": all_watchlist, "wed_series": all_watchlist_web})
     return jsonify({'success': False})
 
 
@@ -185,14 +194,23 @@ def getWatchlist():
 @auth.login_required()
 def removeFromWatchlist():
     data = request.get_json()
-    movie = Movie.query.filter_by(mid=data['mid']).first()
     user = User_table.query.filter_by(uid=auth.current_user()).first()
-    if user and movie:
-        if movie in user.watchlist:
-            user.watchlist.remove(movie)
-            db.session.commit()
-            return jsonify({'success': True, "message": "Removed movie from watchlist"})
-        return jsonify({'success': False, "message": "movie not in watchlist"})
+    if "mid" in data:
+        movie = Movie.query.filter_by(mid=data['mid']).first()
+        if user and movie:
+            if movie in user.watchlist:
+                user.watchlist.remove(movie)
+                db.session.commit()
+                return jsonify({'success': True, "message": "Removed movie from watchlist"})
+            return jsonify({'success': False, "message": "movie not in watchlist"})
+    elif "wsid" in data:
+        web_series = Web_series.query.filter_by(wsid=data["wsid"]).first()
+        if user and web_series:
+            if web_series in user.watchlist_web:
+                user.watchlist_web.remove(web_series)
+                db.session.commit()
+                return jsonify({'success': True, "message": "Removed web_series from watchlist"})
+            return jsonify({'success': False, "message": "Movie not in watchlist"})
     return jsonify({'success': False, "message": "user or movie not exist"})
 
 
@@ -201,13 +219,22 @@ def removeFromWatchlist():
 def addToWatchlist():
     data = request.get_json()
     user = User_table.query.filter_by(uid=auth.current_user()).first()
-    movie = Movie.query.filter_by(mid=data['mid']).first()
-    if user and movie:
-        if movie not in user.watchlist:
-            user.watchlist.append(movie)
-            db.session.commit()
-            return jsonify({"success": True, "message": "Movie added successfully"})
-        return jsonify({"success": False, "message": "Movie already in watchlist"})
+    if "mid" in data:
+        movie = Movie.query.filter_by(mid=data['mid']).first()
+        if user and movie:
+            if movie not in user.watchlist:
+                user.watchlist.append(movie)
+                db.session.commit()
+                return jsonify({"success": True, "message": "Movie added successfully"})
+            return jsonify({"success": False, "message": "Movie already in watchlist"})
+    elif "wsid" in data:
+        web_series = Web_series.query.filter_by(wsid=data["wsid"]).first()
+        if user and web_series:
+            if web_series not in user.watchlist_web:
+                user.watchlist_web.append(web_series)
+                db.session.commit()
+                return jsonify({"success": True, "message": "Web_series added successfully"})
+            return jsonify({"success": False, "message": "Movie already in watchlist"})
     return jsonify({"success": False, "message": "Movie or User not exist"})
 
 

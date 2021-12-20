@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request, send_file
 from .models import *
 from . import db, get_model_dict, permission_required, UPLOAD_MOV
-import random
+from . import auth
+# import random
 
 product_api = Blueprint('product_api', __name__)
 
@@ -31,7 +32,7 @@ def get_Latest(pagesize, pageno):
                     "name": series.name,
                     "image_url": series.image_url,
                 }
-            )  
+            ) 
         return jsonify({"success": True, 'Movies':movies_data, "Web_Series": web_series_data})
     else:
         return jsonify({"success": False})

@@ -14,6 +14,7 @@ class User_table(db.Model):
         default="https://i.pinimg.com/564x/65/25/a0/6525a08f1df98a2e3a545fe2ace4be47.jpg"
     )
     watchlist = db.relationship("Movie", backref="in_watchlist_of")
+    watchlist_web = db.relationship("Web_series", backref="in_watchlist")
     History = db.relationship("Movie", backref="History_of", overlaps="in_watchlist_of,watchlist")
     orders = db.relationship("Order", backref="order_by")
     membership = db.Column(db.String, nullable=False, default="FREE")
@@ -67,6 +68,7 @@ class Season(db.Model):
 
 class Web_series(db.Model):
     wsid = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Integer, db.ForeignKey("user_table.uid"))
     name = db.Column(db.String)
     short_description = db.Column(db.String)
     image_url = db.Column(db.String)
