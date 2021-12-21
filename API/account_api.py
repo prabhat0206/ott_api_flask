@@ -15,29 +15,6 @@ def register():
     password = data['password']
     Gender = data['Gender']
 
-    # if 'email' in data:
-    #     email = data['email']
-    #     user = User_table.query.filter_by(email=email).first()
-    #     if user:
-    #         return jsonify({"success": False, 'error': 'Email already exists, Try to Login.'})
-    #     elif "@" not in email:
-    #         return jsonify({"success": False, 'error': 'Enter a valid Email'})
-    #     razorpay_data = {
-    #         'name': full_name,
-    #         'email': email
-    #     }
-    #     response = client.customer.create(data=razorpay_data)
-    #     new_user = User_table(
-    #         email=email,
-    #         full_name=full_name,
-    #         password=generate_password_hash(
-    #             password, method='sha256'),
-    #         DOB=dob,
-    #         Gender=Gender,
-    #         razorpay_id=response['id']
-    #     )
-    #     db.session.add(new_user)
-    #     db.session.commit()
     if 'Ph_number' in data:
         Ph_number = data['Ph_number']
         user_number = User_table.query.filter_by(Ph_number=Ph_number).first()
@@ -45,12 +22,11 @@ def register():
             return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
         elif "+" not in Ph_number:
             return jsonify({"success": False, 'error': 'Enter phone number with country code'})
-        # razorpay_data = {
-        #     'name': full_name,
-        #     'contact': Ph_number,
-        # }
-        # response = client.customer.create(data=razorpay_data)
-        response = {"id": ""}
+        razorpay_data = {
+            'name': full_name,
+            'contact': Ph_number,
+        }
+        response = client.customer.create(data=razorpay_data)
 
         new_user = User_table(
             password=generate_password_hash(
@@ -168,16 +144,25 @@ def getWatchlist():
     uid = auth.current_user()
     user = User_table.query.filter_by(uid=uid).first()
     if user:
+        all_watchlist_web = []
         all_watchlist = []
         for watchlist in user.watchlist:
             watch = dict()
-            watch["mid"] = watchlist.mid
-            watch['image_url'] = watchlist.image_url
-            watch['name'] = watchlist.name
-            watch['description'] = watchlist.description
-            watch['language'] = watchlist.Language
-            all_watchlist.append(watch)
-        all_watchlist_web = []
+            if watchlist.Type != "Episode":
+                watch["mid"] = watchlist.mid
+                watch['image_url'] = watchlist.image_url
+                watch['name'] = watchlist.name
+                watch['description'] = watchlist.description
+                watch['language'] = watchlist.Language
+                all_watchlist.append(watch)
+            else:
+                watch["mid"] = watchlist.mid
+                watch['image_url'] = watchlist.image_url
+                watch['name'] = watchlist.name
+                watch['description'] = watchlist.description
+                watch['language'] = watchlist.Language
+                all_watchlist_web.append(watch)
+
         for watchlist in user.watchlist_web:
             all_watchlist_web.append({
                 "wsid": watchlist.wsid,

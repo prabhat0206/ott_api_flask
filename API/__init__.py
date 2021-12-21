@@ -31,7 +31,7 @@ db.init_app(app)
 migrate.init_app(app, db)
 
 
-client = razorpay.Client(auth=("rzp_test_Xt2JLjZeOvsi19", "pbDRRTEMdA2kezzQbJh1hD55"))
+client = razorpay.Client(auth=("rzp_test_grEV6KDDjdjUsj", "q4zynOZi8zg3JLf5t2Yo81PU"))
 
 
 def get_model_dict(model):
@@ -63,6 +63,7 @@ from .account_api import account_api
 from .product_api import product_api
 from .order_api import order_api
 from .admin_api import admin
+from .payment_api import payment_api
 from .models import *
 
 if not path.exists('API/' + DB_NAME):
@@ -81,7 +82,7 @@ def verify_token(token):
 
 
 app.register_blueprint(product_api, url_prefix='/')
-# app.register_blueprint(payment_api, url_prefix='/')
+app.register_blueprint(payment_api, url_prefix='/')
 app.register_blueprint(admin, url_prefix='/')
 app.register_blueprint(account_api, url_prefix='/')
 app.register_blueprint(order_api, url_prefix='/')
