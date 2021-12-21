@@ -54,6 +54,7 @@ class Movie(db.Model):
     Director = db.Column(db.String)
     Type = db.Column(db.String)
     orignal = db.Column(db.Integer)
+    trending = db.Column(db.Boolean, default=False)
     sid = db.Column(db.Integer, db.ForeignKey('season.sid'))
 
 
@@ -79,6 +80,7 @@ class Web_series(db.Model):
     orignal = db.Column(db.Integer)
     Language = db.Column(db.String)
     Director = db.Column(db.String)
+    trending = db.Column(db.Boolean, default=False)
 
 
 class Order(db.Model):

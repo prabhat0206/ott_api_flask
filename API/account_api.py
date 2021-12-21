@@ -18,6 +18,9 @@ def register():
     if 'Ph_number' in data:
         Ph_number = data['Ph_number']
         user_number = User_table.query.filter_by(Ph_number=Ph_number).first()
+        user_email = User_table.query.filter_by(email=data["email"]).first()
+        if user_email:
+            return jsonify({"success": False, "error": "Email already in use"})
         if user_number:
             return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
         elif "+" not in Ph_number:
@@ -35,6 +38,7 @@ def register():
             DOB=dob,
             Gender=Gender,
             membership='Free',
+            email=data.get('email'),
             razorpay_id=response['id']
         )
         db.session.add(new_user)

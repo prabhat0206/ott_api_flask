@@ -16,6 +16,7 @@ def get_Latest(pagesize, pageno):
     # web_series = db.session.execute(web_series).all()
     movies_data = []
     web_series_data = []
+    trending = []
     if len(movies) > 0 or len(web_series) > 0:
         for movie in movies:
             movies_data.append(
@@ -25,6 +26,8 @@ def get_Latest(pagesize, pageno):
                     "image_url": movie.image_url,
                 }
             )
+            if movie.trending:
+                trending.append({"mid": movie.mid, "name": movie.name, "image_url": movie.image_url, "type": "movie"})
         for series in web_series:
             web_series_data.append(
                 {
@@ -33,7 +36,9 @@ def get_Latest(pagesize, pageno):
                     "image_url": series.image_url,
                 }
             ) 
-        return jsonify({"success": True, 'Movies':movies_data, "Web_Series": web_series_data})
+            if series.trending:
+                trending.append({"wsid": series.wsid, "name": series.name, "image_url": series.image_url,  "type": "web_series"})
+        return jsonify({"success": True, 'Movies':movies_data, "Web_Series": web_series_data, "trending": trending,})
     else:
         return jsonify({"success": False})
 
