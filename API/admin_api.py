@@ -10,6 +10,48 @@ static_folder = 'static'
 admin = Blueprint('admin', __name__)
 
 
+@admin.post('/admin/getAllData')
+def allData():
+    if request.headers.get('Authorization'):
+        credentails = parse_authorization_header(
+            request.headers.get('Authorization')
+        )
+        if not credentails:
+            abort(401)
+        if credentails.password and credentails.username is not None:
+            if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
+                movies = Movie.query.all()
+                web_series = Web_series.query.all()
+                movies_data = []
+                web_series_data = []
+                if len(movies) > 0 or len(web_series) > 0:
+                    for movie in movies:
+                        movies_data.append(
+                            {
+                                "mid": movie.mid,
+                                "name": movie.name,
+                                "image_url": movie.image_url,
+                            }
+                        )
+                    for series in web_series:
+                        web_series_data.append(
+                            {
+                                "wsid": series.wsid,
+                                "name": series.name,
+                                "image_url": series.image_url,
+                            }
+                        ) 
+                    return jsonify({"success": True, 'Movies':movies_data, "Web_Series": web_series_data})
+                else:
+                    return jsonify({"success": False})
+            else:
+                abort(401)
+        else:
+            abort(401)
+    else:
+        abort(401)
+
+
 @admin.route('/admin/getMovie', methods=['POST'])
 @admin.route('/admin/getMovie/', methods=['POST'])
 def get_Movie():

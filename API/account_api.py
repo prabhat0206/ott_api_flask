@@ -46,7 +46,6 @@ def register():
     return jsonify({"success": True, "sha": new_user.password, "user_id": new_user.uid})
     
 
-
 @account_api.route('/api/login/', methods=['POST'])
 @account_api.route('/api/login', methods=['POST'])
 def login():
