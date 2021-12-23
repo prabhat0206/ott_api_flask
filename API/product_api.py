@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, send_file
 from .models import *
-from . import db, get_model_dict, permission_required, UPLOAD_MOV
+from . import db, get_model_dict, permission_required, UPLOAD_MOV, BASE_IMAGE_URL
 from . import auth
 # import random
 
@@ -23,7 +23,7 @@ def get_Latest(pagesize, pageno):
                 {
                     "mid": movie.mid,
                     "name": movie.name,
-                    "image_url": movie.image_url,
+                    "image_url": BASE_IMAGE_URL + movie.image_url,
                 }
             )
             if movie.trending:
@@ -33,7 +33,7 @@ def get_Latest(pagesize, pageno):
                 {
                     "wsid": series.wsid,
                     "name": series.name,
-                    "image_url": series.image_url,
+                    "image_url": BASE_IMAGE_URL + series.image_url,
                 }
             ) 
             if series.trending:
@@ -58,7 +58,7 @@ def get_Orignals(pagesize, pageno):
                 {
                     "mid": movie.mid,
                     "name": movie.name,
-                    "image_url": movie.image_url
+                    "image_url": BASE_IMAGE_URL + movie.image_url
                 }
             )
         for series in web_series:
@@ -66,7 +66,7 @@ def get_Orignals(pagesize, pageno):
                 {
                     "wsid": series.wsid,
                     "name": series.name,
-                    "image_url": series.image_url
+                    "image_url": BASE_IMAGE_URL + series.image_url
                 }
             )
         return jsonify({"success": True, 'Orignal_Movies': result_movies, 'Orignal_Web_series': result_web_series})
@@ -84,7 +84,7 @@ def getMovies(pagesize=12, pageno=1):
                 {
                     "mid": movie.mid,
                     "name": movie.name,
-                    "image_url": movie.image_url,
+                    "image_url":BASE_IMAGE_URL + movie.image_url,
                 }
             )
         return jsonify({"success": True, 'movies': movies})
@@ -102,7 +102,7 @@ def getWebSeries(pagesize=12, pageno=1):
                 {
                     "wsid": series.wsid,
                     "name": series.name,
-                    "image_url": series.image_url,
+                    "image_url": BASE_IMAGE_URL + series.image_url,
                 }
             )
         return jsonify({"success": True, 'web_series': web_series})
@@ -124,7 +124,7 @@ def get_Web_series():
                 all_episodes.append({
                     'mid': ep.mid,
                     'name': ep.name,
-                    'image_url': ep.image_url,
+                    'image_url': BASE_IMAGE_URL + ep.image_url,
                     "type": ep.Type,
                 })
             all_details['season'].append(all_episodes)
@@ -182,7 +182,7 @@ def search_product(word):
                 {
                     "mid": movie[0],
                     "name": movie[1],
-                    "image_url": movie[2]
+                    "image_url":BASE_IMAGE_URL + movie[2]
                 }
             )
         for series in web_series:
@@ -190,7 +190,7 @@ def search_product(word):
                 {
                     "wsid": series[0],
                     "name": series[1],
-                    "image_url": series[2]
+                    "image_url":BASE_IMAGE_URL + series[2]
                 }
             )
         return jsonify({"success": True, 'Movies': result_movies, 'Web_series':result_web_series})

@@ -3,7 +3,7 @@ from werkzeug.http import parse_authorization_header
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from .models import *
-from . import UPLOAD_IMG, get_model_dict, UPLOAD_MOV
+from . import UPLOAD_IMG, get_model_dict, UPLOAD_MOV, BASE_IMAGE_URL
 import os
 
 static_folder = 'static'
@@ -30,7 +30,7 @@ def allData():
                             {
                                 "mid": movie.mid,
                                 "name": movie.name,
-                                "image_url": movie.image_url,
+                                "image_url": BASE_IMAGE_URL + movie.image_url,
                             }
                         )
                     for series in web_series:
@@ -38,7 +38,7 @@ def allData():
                             {
                                 "wsid": series.wsid,
                                 "name": series.name,
-                                "image_url": series.image_url,
+                                "image_url": BASE_IMAGE_URL + series.image_url,
                             }
                         ) 
                     return jsonify({"success": True, 'Movies':movies_data, "Web_Series": web_series_data})
