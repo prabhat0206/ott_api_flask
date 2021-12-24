@@ -26,7 +26,7 @@ db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
 auth = HTTPTokenAuth(scheme="Bearer")
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 db.init_app(app)
 migrate.init_app(app, db)
