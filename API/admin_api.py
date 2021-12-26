@@ -628,7 +628,7 @@ def all_users():
                         for user in users:
                             temp_user = get_model_dict(user)
                             all_users.append(temp_user)
-                        return jsonify({'success': True}), 200
+                        return jsonify({'success': True, "users": all_users}), 200
                     else:
                         return jsonify({'success': True, 'orders': 'Empty'}), 200
                 except:
