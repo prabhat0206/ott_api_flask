@@ -3,7 +3,7 @@ from werkzeug.http import parse_authorization_header
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from .models import *
-from . import UPLOAD_IMG, get_model_dict, UPLOAD_MOV, BASE_IMAGE_URL
+from . import UPLOAD_IMG, generate_signed_url, get_model_dict, UPLOAD_MOV, BASE_IMAGE_URL, upload_file_to_s3
 import os
 
 static_folder = 'static'
@@ -640,7 +640,6 @@ def all_users():
     else:
         abort(401)
 
-
 @admin.route('/admin/addimage', methods=['POST'])
 @admin.route('/admin/addimage/', methods=['POST'])
 def addimage():
@@ -653,14 +652,16 @@ def addimage():
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
                 file = request.files['file']
-                if not file:
-                    return jsonify({'success': True, 'error': "No File Chosen!"})
-                filename = secure_filename(file.filename)
-                if "." not in filename:
-                    return jsonify({'success': True, 'error': "File Extension is not valid"})
-                filename = filename_finder(filename)
-                file.save(os.path.join(UPLOAD_IMG, filename))
-                return jsonify({'success': True, 'url': url_for('static', filename=filename, _external=True)}), 200
+                # if not file:
+                #     return jsonify({'success': True, 'error': "No File Chosen!"})
+                # filename = secure_filename(file.filename)
+                # if "." not in filename:
+                #     return jsonify({'success': True, 'error': "File Extension is not valid"})
+                # filename = filename_finder(filename)
+                # file.save(os.path.join(UPLOAD_IMG, filename))
+                # return jsonify({'success': True, 'url': url_for('static', filename=filename, _external=True)}), 200
+                output = upload_file_to_s3(file)
+                return jsonify({"success": True, "url": output})
             else:
                 abort(401)
         else:

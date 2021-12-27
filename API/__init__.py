@@ -7,22 +7,30 @@ from flask_cors import CORS
 from os import path
 import razorpay
 from datetime import date
+import boto3
+from botocore.config import Config
+from .config import S3_KEY, S3_SECRET, S3_BUCKET, S3_LOCATION, S3_REGION
 # from werkzeug.security import check_password_hash
 
 DB_NAME = 'API.db'
 app = Flask(__name__)
-app.secret_key = 'topsecret'
+app.config.from_pyfile('config.py')
 UPLOAD_IMG = './static/'
 UPLOAD_MOV = './UPLOADS'
 
 BASE_IMAGE_URL = ""
 
 app.config["UPLOAD_IMG"] = UPLOAD_IMG
-
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://vkjgwkybkeokwx:01f31e64d8c35f4ec06a7e3efd210af4bcacfb697cef829d6474011f96e6a383@ec2-54-159-107-189.compute-1.amazonaws.com:5432/d7glihdfmkm190'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
+
+
+s3 = boto3.client(
+   "s3",
+   config=Config(signature_version='s3v4'),
+   aws_access_key_id=S3_KEY,
+   aws_secret_access_key=S3_SECRET,
+   region_name=S3_REGION
+)
 
 migrate = Migrate(app, db)
 auth = HTTPTokenAuth(scheme="Bearer")
@@ -58,6 +66,45 @@ def permission_required():
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+def upload_file_to_s3(file, acl=False):
+    better_filename = file.filename.replace(".", "").replace(" ", "_")
+    try:
+        if acl:
+            s3.upload_fileobj(
+                file,
+                S3_BUCKET,
+                better_filename,
+                ExtraArgs={
+                    "ContentType": file.content_type
+                }
+            )
+            return better_filename
+        else:
+            s3.upload_fileobj(
+                file,
+                S3_BUCKET,
+                better_filename,
+                ExtraArgs={
+                    "ACL": "public-read",
+                    "ContentType": file.content_type
+                }
+            )
+            return "{}{}".format(S3_LOCATION, better_filename)
+
+    except Exception as e:
+        print("Something Happened: ", e)
+        return e
+
+
+def generate_signed_url(file):
+    try:
+        response = s3.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': file}, ExpiresIn=3600)
+        return response
+    except Exception as e:
+        print(e)
+
 
 
 from .account_api import account_api
