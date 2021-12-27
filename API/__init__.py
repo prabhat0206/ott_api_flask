@@ -15,7 +15,7 @@ app.secret_key = 'topsecret'
 UPLOAD_IMG = './static/'
 UPLOAD_MOV = './UPLOADS'
 
-BASE_IMAGE_URL = "https://python7proffus.herokuapp.com"
+BASE_IMAGE_URL = ""
 
 app.config["UPLOAD_IMG"] = UPLOAD_IMG
 

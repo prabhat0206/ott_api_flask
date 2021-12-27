@@ -20,7 +20,7 @@ def allData():
             abort(401)
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                movies = Movie.query.all()
+                movies = Movie.query.filter(Movie.Type != "Episode").all()
                 web_series = Web_series.query.all()
                 movies_data = []
                 web_series_data = []
