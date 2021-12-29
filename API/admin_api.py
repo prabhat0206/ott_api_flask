@@ -231,7 +231,7 @@ def add_Web_series():
             abort(401)
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                data = request.form()
+                data = request.form
                 name = data['name']
                 date = datetime.now()
                 short_description = data['short_description']
