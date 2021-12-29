@@ -1,9 +1,10 @@
+from boto3 import client
 from flask import Blueprint, jsonify, request, abort, url_for, send_file
 from werkzeug.http import parse_authorization_header
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from .models import *
-from . import UPLOAD_IMG, generate_signed_url, get_model_dict, UPLOAD_MOV, BASE_IMAGE_URL, upload_file_to_s3
+from . import S3_BUCKET, generate_signed_url, get_model_dict, UPLOAD_MOV, BASE_IMAGE_URL, upload_file_to_s3, s3
 import os
 
 static_folder = 'static'
@@ -90,7 +91,7 @@ def add_Movie():
             abort(401)
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                data = request.get_json()
+                data = request.form
                 name = data['name']
                 date = datetime.now()
                 description = data['description']
@@ -98,13 +99,13 @@ def add_Movie():
                 Director = data['Director']
                 short_description = data['short_description']
                 Type='Movie'
-                image_url = data['image_url']
+                image = request.files['image']
                 genre = data['Genre']
                 orignal = data['orignal']
                 movie = Movie(
                     name=name,
                     date=date,
-                    image_url=image_url,
+                    image_url=upload_file_to_s3(image),
                     short_description=short_description,
                     description=description,
                     Language=Language,
@@ -114,24 +115,6 @@ def add_Movie():
                     orignal=orignal
                 )
                 db.session.add(movie)
-                if 'q480p' in request.files:
-                    q480p = request.files['q480p']
-                    if q480p:
-                        filename = secure_filename(q480p.filename)
-                        if "." not in filename:
-                            return jsonify({'success': True, 'error': "File Extension is not valid"})
-                        filename = str(movie.mid) + "480p." + filename
-                        q480p.save(os.path.join(UPLOAD_MOV, filename))
-                        movie.q480p = url_for('Movie', filename=filename, _external=True)
-                if 'q720p' in request.files:
-                    q720p = request.files['q720p']
-                    if q720p:
-                        filename = secure_filename(q720p.filename)
-                        if "." not in filename:
-                            return jsonify({'success': True, 'error': "File Extension is not valid"})
-                        q720p.save(os.path.join(UPLOAD_MOV, filename))
-                        filename = str(movie.mid) + "720p." + filename
-                        movie.q720p = url_for('Movie', filename=filename, _external=True)
                 if 'q1080p' in request.files:
                     q1080p = request.files['q1080p']
                     if q1080p:
@@ -139,8 +122,7 @@ def add_Movie():
                         if "." not in filename:
                             return jsonify({'success': True, 'error': "File Extension is not valid"})
                         filename = str(movie.mid) + "1080p." + filename
-                        q1080p.save(os.path.join(UPLOAD_MOV, filename))
-                        movie.q1080p = url_for('Movie', filename=filename, _external=True)
+                        movie.q1080p = upload_file_to_s3(q1080p, True)
 
                 db.session.commit()
                 return jsonify({'success': True, 'mid': movie.mid}), 200
@@ -164,7 +146,7 @@ def edit_Movie():
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
 
-                data = request.get_json()
+                data = request.form
                 mid = int(data['mid'])
                 name = data['name']
                 description = data['description']
@@ -182,24 +164,6 @@ def edit_Movie():
                     movie.Director = Director
                     movie.genre = genre
                     movie.orignal = orignal
-                    if 'q480p' in request.files:
-                        q480p = request.files['q480p']
-                        if q480p:
-                            filename = secure_filename(q480p.filename)
-                            if "." not in filename:
-                                return jsonify({'success': True, 'error': "File Extension is not valid"})
-                            filename = str(movie.mid) + "480p." + filename
-                            q480p.save(os.path.join(UPLOAD_MOV, filename))
-                            movie.q480p = url_for('Movie', filename=filename, _external=True)
-                    if 'q720p' in request.files:
-                        q720p = request.files['q720p']
-                        if q720p:
-                            filename = secure_filename(q720p.filename)
-                            if "." not in filename:
-                                return jsonify({'success': True, 'error': "File Extension is not valid"})
-                            q720p.save(os.path.join(UPLOAD_MOV, filename))
-                            filename = str(movie.mid) + "720p." + filename
-                            movie.q720p = url_for('Movie', filename=filename, _external=True)
                     if 'q1080p' in request.files:
                         q1080p = request.files['q1080p']
                         if q1080p:
@@ -207,8 +171,8 @@ def edit_Movie():
                             if "." not in filename:
                                 return jsonify({'success': True, 'error': "File Extension is not valid"})
                             filename = str(movie.mid) + "1080p." + filename
-                            q1080p.save(os.path.join(UPLOAD_MOV, filename))
-                            movie.q1080p = url_for('Movie', filename=filename, _external=True)
+                            s3.delete_object(Bucket=S3_BUCKET, Key=movie.q1080p)
+                            movie.q1080p = upload_file_to_s3(q1080p, True)
 
                     db.session.commit()
                     return jsonify({'success': True}), 200
@@ -238,18 +202,9 @@ def delete_Movie():
                     mid = data['mid']
                     movie = Movie.query.filter_by(mid=mid).first()
                     if movie:
-                        if movie.q480p:
-                            filename = movie.q480p
-                            filename = filename.partition("/Movie/")[2]
-                            os.remove(UPLOAD_MOV + filename)
-                        if movie.q720p:
-                            filename = movie.q720p
-                            filename = filename.partition("/Movie/")[2]
-                            os.remove(UPLOAD_MOV + filename)
                         if movie.q1080p:
                             filename = movie.q1080p
-                            filename = filename.partition("/Movie/")[2]
-                            os.remove(UPLOAD_MOV + filename)
+                            s3.delete_object(Bucket=S3_BUCKET, Key=filename)
                         db.session.delete(movie)
                         db.session.commit()
                         return jsonify({'success': True}), 200
@@ -276,20 +231,20 @@ def add_Web_series():
             abort(401)
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                data = request.get_json()
+                data = request.form()
                 name = data['name']
                 date = datetime.now()
                 short_description = data['short_description']
                 description = data['description']
                 Language = data['Language']
-                image_url = data['image_url']
+                image_url = data['image']
                 Director = data['Director']
                 genre = data['Genre']
                 orignal = data['orignal']
                 web_series = Web_series(
                     name=name,
                     date=date,
-                    image_url=image_url,
+                    image_url=upload_file_to_s3(image_url),
                     short_description=short_description,
                     description=description,
                     Language=Language,
@@ -319,12 +274,11 @@ def edit_Web_series():
             abort(401)
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                data = request.get_json()
+                data = request.form
                 name = data['name']
                 short_description = data['short_description']
                 description = data['description']
                 Language = data['Language']
-                image_url = data['image_url']
                 Director = data['Director']
                 genre = data['Genre']
                 wsid = data['wsid']
@@ -332,13 +286,16 @@ def edit_Web_series():
                 web_series = Web_series.query.filter_by(wsid).first()
                 if web_series:
                     web_series.name = name
-                    web_series.image_url = image_url
                     web_series.short_description = short_description
                     web_series.description = description
                     web_series.Language = Language
                     web_series.Director = Director
                     web_series.genre = genre
                     web_series.orignal = orignal
+                    if 'image' in request.files:
+                        image_url = request.files['image'] or None
+                        if image_url:
+                            web_series.image_url = upload_file_to_s3(image_url)
                     db.session.commit()
                     return jsonify({'success': True}), 200
                 else:
@@ -369,18 +326,10 @@ def delete_Web_series():
                     if ws:
                         for season in ws.sid:
                             for movie in season.mid:
-                                if movie.q480p:
-                                    filename = movie.q480p
-                                    filename = filename.partition("/Movie/")[2]
-                                    os.remove(UPLOAD_MOV + filename)
-                                if movie.q720p:
-                                    filename = movie.q720p
-                                    filename = filename.partition("/Movie/")[2]
-                                    os.remove(UPLOAD_MOV + filename)
                                 if movie.q1080p:
                                     filename = movie.q1080p
                                     filename = filename.partition("/Movie/")[2]
-                                    os.remove(UPLOAD_MOV + filename)
+                                    s3.delete_object(Bucket=S3_BUCKET, Key=movie.q1080p)
                                 db.session.delete(movie)
                             db.session.delete(season)
                         db.session.delete(ws)
@@ -482,18 +431,10 @@ def delete_Season():
                     season = Season.query.filter_by(sid=sid).first()
                     if season:
                         for movie in season.mid:
-                            if movie.q480p:
-                                filename = movie.q480p
-                                filename = filename.partition("/Movie/")[2]
-                                os.remove(UPLOAD_MOV + filename)
-                            if movie.q720p:
-                                filename = movie.q720p
-                                filename = filename.partition("/Movie/")[2]
-                                os.remove(UPLOAD_MOV + filename)
                             if movie.q1080p:
                                 filename = movie.q1080p
                                 filename = filename.partition("/Movie/")[2]
-                                os.remove(UPLOAD_MOV + filename)
+                                s3.delete_object(Bucket=S3_BUCKET, Key=movie.q1080p)
                             db.session.delete(movie)
                         db.session.delete(season)
                         db.session.commit()
@@ -521,38 +462,21 @@ def add_Episode():
             abort(401)
         if credentails.password and credentails.username is not None:
             if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                data = request.get_json()
+                data = request.form
                 name = data['name']
                 Type='Episode'
                 sid = data['sid']
-                image_url = data['image_url']
                 season = Season.query.filter_by(sid=sid).first()
                 if season:
                     movie = Movie(
                         name=name,
-                        image_url=image_url,
                         Type=Type,
                         sid=sid
                     )
                     db.session.add(movie)
-                    if 'q480p' in request.files:
-                        q480p = request.files['q480p']
-                        if q480p:
-                            filename = secure_filename(q480p.filename)
-                            if "." not in filename:
-                                return jsonify({'success': True, 'error': "File Extension is not valid"})
-                            filename = str(movie.mid) + "480p." + filename
-                            q480p.save(os.path.join(UPLOAD_MOV, filename))
-                            movie.q480p = url_for('Movie', filename=filename, _external=True)
-                    if 'q720p' in request.files:
-                        q720p = request.files['q720p']
-                        if q720p:
-                            filename = secure_filename(q720p.filename)
-                            if "." not in filename:
-                                return jsonify({'success': True, 'error': "File Extension is not valid"})
-                            q720p.save(os.path.join(UPLOAD_MOV, filename))
-                            filename = str(movie.mid) + "720p." + filename
-                            movie.q720p = url_for('Movie', filename=filename, _external=True)
+                    if 'image' in request.files:
+                        image_url = request.files['image']
+                        movie.image_url = upload_file_to_s3(image_url)
                     if 'q1080p' in request.files:
                         q1080p = request.files['q1080p']
                         if q1080p:
@@ -560,11 +484,89 @@ def add_Episode():
                             if "." not in filename:
                                 return jsonify({'success': True, 'error': "File Extension is not valid"})
                             filename = str(movie.mid) + "1080p." + filename
-                            q1080p.save(os.path.join(UPLOAD_MOV, filename))
-                            movie.q1080p = url_for('Movie', filename=filename, _external=True)
+                            movie.q1080p = upload_file_to_s3(q1080p, True)
                     db.session.commit()
                     return jsonify({'success': True, 'mid': movie.mid}), 200
                 else:
+                    abort(422)
+            else:
+                abort(401)
+        else:
+            abort(401)
+    else:
+        abort(401)
+
+
+@admin.post('/admin/edit_Episode/')
+def edit_Episode():
+    if request.headers.get('Authorization'):
+        credentails = parse_authorization_header(
+            request.headers.get('Authorization')
+        )
+        if not credentails:
+            abort(401)
+        if credentails.password and credentails.username is not None:
+            if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
+                data = request.form
+                mid = data.get('mid')
+                name = data['name']
+                Type='Episode'
+                sid = data['sid']
+                season = Season.query.filter_by(sid=sid).first()
+                movie = Movie.query.filter_by(mid=mid).first()
+                if season:
+                    movie.name=name,
+                    movie.Type=Type,
+                    movie.sid=sid
+                    if 'image' in request.files:
+                        image_url = request.files['image'] or None
+                        if image_url:
+                            movie.image_url=upload_file_to_s3(image_url),
+                    if 'q1080p' in request.files:
+                        q1080p = request.files['q1080p']
+                        if q1080p:
+                            filename = secure_filename(q1080p.filename)
+                            if "." not in filename:
+                                return jsonify({'success': True, 'error': "File Extension is not valid"})
+                            filename = str(movie.mid) + "1080p." + filename
+                            s3.delete_object(Bucket=S3_BUCKET, Key=movie.q1080p)
+                            movie.q1080p = upload_file_to_s3(q1080p, True)
+                    db.session.commit()
+                    return jsonify({'success': True, 'mid': movie.mid}), 200
+                else:
+                    abort(422)
+            else:
+                abort(401)
+        else:
+            abort(401)
+    else:
+        abort(401)
+
+@admin.post('/admin/delete_Episode')
+def delete_Episode():
+    if request.headers.get('Authorization'):
+        credentails = parse_authorization_header(
+            request.headers.get('Authorization')
+        )
+        if not credentails:
+            abort(401)
+        if credentails.password and credentails.username is not None:
+            if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
+                try:
+                    data = request.get_json()
+                    mid = data['mid']
+                    movie = Movie.query.filter_by(mid=mid).first()
+                    if movie:
+                        if movie.q1080p:
+                            filename = movie.q1080p
+                            filename = filename.partition("/Movie/")[2]
+                            s3.delete_object(Bucket=S3_BUCKET, Key=movie.q1080p)
+                        db.session.delete(movie)
+                        db.session.commit()
+                        return jsonify({'success': True}), 200
+                    else:
+                        abort(422)
+                except:
                     abort(422)
             else:
                 abort(401)
