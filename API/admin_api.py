@@ -237,7 +237,7 @@ def add_Web_series():
                 short_description = data['short_description']
                 description = data['description']
                 Language = data['Language']
-                image_url = data['image']
+                image_url = request.files['image']
                 Director = data['Director']
                 genre = data['Genre']
                 orignal = data['orignal']
