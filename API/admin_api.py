@@ -497,7 +497,7 @@ def add_Episode():
         abort(401)
 
 
-@admin.post('/admin/edit_Episode/')
+@admin.post('/admin/edit_Episode')
 def edit_Episode():
     if request.headers.get('Authorization'):
         credentails = parse_authorization_header(
