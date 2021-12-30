@@ -384,8 +384,7 @@ def add_Season():
         abort(401)
 
 
-@admin.route('/admin/edit_Season', methods=['POST'])
-@admin.route('/admin/edit_Season/', methods=['POST'])
+@admin.post('/admin/edit_Season')
 def edit_Season():
     if request.headers.get('Authorization'):
         credentails = parse_authorization_header(
