@@ -5,7 +5,7 @@ from .models import *
 payment_api = Blueprint('payment_api', __name__)
 
 
-@payment_api.post("/make_payment")
+@payment_api.post("/api/make_payment")
 @auth.login_required()
 def make_payment():
     try:
@@ -22,7 +22,7 @@ def make_payment():
     except:
         abort(500)
 
-@payment_api.post("/verify_order")
+@payment_api.post("/api/verify_order")
 def verify_order():
     try:
         data = request.get_json()

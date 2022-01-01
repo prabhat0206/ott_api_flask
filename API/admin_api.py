@@ -83,54 +83,54 @@ def get_Movie():
 @admin.route('/admin/addMovie', methods=['POST'])
 @admin.route('/admin/addMovie/', methods=['POST'])
 def add_Movie():
-    # if request.headers.get('Authorization'):
-    #     credentails = parse_authorization_header(
-    #         request.headers.get('Authorization')
-    #     )
-    #     if not credentails:
-    #         abort(401)
-    #     if credentails.password and credentails.username is not None:
-    #         if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-    data = request.form
-    name = data['name']
-    date = datetime.now()
-    description = data['description']
-    Language = data['Language']
-    Director = data['Director']
-    short_description = data['short_description']
-    Type='Movie'
-    image = request.files['image']
-    genre = data['Genre']
-    orignal = data['orignal']
-    movie = Movie(
-        name=name,
-        date=date,
-        image_url=upload_file_to_s3(image),
-        short_description=short_description,
-        description=description,
-        Language=Language,
-        Director=Director,
-        Type=Type,
-        genre=genre,
-        orignal=orignal
-    )
-    db.session.add(movie)
-    if 'q1080p' in request.files:
-        q1080p = request.files['q1080p']
-        if q1080p:
-            filename = secure_filename(q1080p.filename)
-            if "." not in filename:
-                return jsonify({'success': True, 'error': "File Extension is not valid"})
-            filename = str(movie.mid) + "1080p." + filename
-            movie.q1080p = upload_file_to_s3(q1080p, True)
-    db.session.commit()
-    return jsonify({'success': True, 'mid': movie.mid}), 200
-    #         else:
-    #             abort(401)
-    #     else:
-    #         abort(401)
-    # else:
-    #     abort(401)
+    if request.headers.get('Authorization'):
+        credentails = parse_authorization_header(
+            request.headers.get('Authorization')
+        )
+        if not credentails:
+            abort(401)
+        if credentails.password and credentails.username is not None:
+            if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
+                data = request.form
+                name = data['name']
+                date = datetime.now()
+                description = data['description']
+                Language = data['Language']
+                Director = data['Director']
+                short_description = data['short_description']
+                Type='Movie'
+                image = request.files['image']
+                genre = data['Genre']
+                orignal = data['orignal']
+                movie = Movie(
+                    name=name,
+                    date=date,
+                    image_url=upload_file_to_s3(image),
+                    short_description=short_description,
+                    description=description,
+                    Language=Language,
+                    Director=Director,
+                    Type=Type,
+                    genre=genre,
+                    orignal=orignal
+                )
+                db.session.add(movie)
+                # if 'q1080p' in request.files:
+                q1080p = request.files['q1080p']
+                if q1080p:
+                    filename = secure_filename(q1080p.filename)
+                    if "." not in filename:
+                        return jsonify({'success': True, 'error': "File Extension is not valid"})
+                    filename = str(movie.mid) + "1080p." + filename
+                    movie.q1080p = upload_file_to_s3(q1080p, True)
+                db.session.commit()
+                return jsonify({'success': True, 'mid': movie.mid}), 200
+            else:
+                abort(401)
+        else:
+            abort(401)
+    else:
+        abort(401)
 
 
 @admin.route('/admin/editMovie', methods=['POST'])
@@ -219,47 +219,51 @@ def delete_Movie():
         abort(401)
 
 
-@admin.route('/admin/add_Web_series', methods=['POST'])
-@admin.route('/admin/add_Web_series/', methods=['POST'])
+@admin.post('/admin/add_Web_series')
 def add_Web_series():
-    if request.headers.get('Authorization'):
-        credentails = parse_authorization_header(
-            request.headers.get('Authorization')
-        )
-        if not credentails:
-            abort(401)
-        if credentails.password and credentails.username is not None:
-            if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                data = request.form
-                name = data['name']
-                date = datetime.now()
-                short_description = data['short_description']
-                description = data['description']
-                Language = data['Language']
-                image_url = request.files['image']
-                Director = data['Director']
-                genre = data['Genre']
-                orignal = data['orignal']
-                web_series = Web_series(
-                    name=name,
-                    date=date,
-                    image_url=upload_file_to_s3(image_url),
-                    short_description=short_description,
-                    description=description,
-                    Language=Language,
-                    Director=Director,
-                    genre=genre,
-                    orignal=orignal
-                )
-                db.session.add(web_series)
-                db.session.commit()
-                return jsonify({'success': True, 'wsid':web_series.wsid}), 200
+    try:
+        if request.headers.get('Authorization'):
+            credentails = parse_authorization_header(
+                request.headers.get('Authorization')
+            )
+            if not credentails:
+                abort(401)
+            if credentails.password and credentails.username is not None:
+                if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
+                    data = request.form
+                    name = data['name']
+                    date = datetime.now()
+                    short_description = data['short_description']
+                    description = data['description']
+                    Language = data['Language']
+                    image_url = request.files['image']
+                    Director = data['Director']
+                    genre = data['Genre']
+                    orignal = data['orignal']
+                    web_series = Web_series(
+                        name=name,
+                        date=date,
+                        image_url=upload_file_to_s3(image_url),
+                        short_description=short_description,
+                        description=description,
+                        Language=Language,
+                        Director=Director,
+                        genre=genre,
+                        orignal=orignal
+                    )
+                    
+                    db.session.add(web_series)
+                    db.session.commit()
+                    return jsonify({'success': True, 'wsid':web_series.wsid}), 200
+                else:
+                    abort(401)
             else:
                 abort(401)
         else:
             abort(401)
-    else:
-        abort(401)
+    except Exception as e:
+        print(e, "here")
+        return jsonify({'success': True})
 
 
 @admin.route('/admin/edit_Web_series', methods=['POST'])
@@ -383,7 +387,7 @@ def add_Season():
     else:
         abort(401)
 
-
+# pyThOn($)78
 @admin.post('/admin/edit_Season')
 def edit_Season():
     if request.headers.get('Authorization'):
