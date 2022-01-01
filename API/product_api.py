@@ -127,7 +127,7 @@ def get_Web_series():
             for ep in season.mid:
                 seasonEpisode['episodes'].append({
                     'mid': ep.mid,
-                    'name': "Season " + str(name_season),
+                    'name': ep.name,
                     'image_url': BASE_IMAGE_URL + ep.image_url,
                     "type": ep.Type,
                 })
