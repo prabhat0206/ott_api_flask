@@ -1,7 +1,6 @@
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, jsonify, request
 from .models import *
-from . import db, get_model_dict, permission_required, UPLOAD_MOV, BASE_IMAGE_URL
-from . import auth
+from . import generate_signed_url, get_model_dict, permission_required, BASE_IMAGE_URL
 # import random
 
 product_api = Blueprint('product_api', __name__)
@@ -203,7 +202,11 @@ def search_product(word):
         return jsonify({"success": False})
 
 
-@product_api.route('/Movie/<string:filename>')
+@product_api.route('/Movie/<mid>')
 @permission_required()
-def send_file_mk(filename):
-    return send_file(UPLOAD_MOV + filename)
+def send_file_mk(mid):
+    movie = request.query.filter_by(mid=int(mid)).first()
+    return jsonify({"success": True, 'link': generate_signed_url(movie.q1080p)})
+
+
+

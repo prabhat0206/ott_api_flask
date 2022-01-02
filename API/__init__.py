@@ -100,7 +100,7 @@ def upload_file_to_s3(file, acl=False):
 
 def generate_signed_url(file):
     try:
-        response = s3.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': file}, ExpiresIn=3600)
+        response = s3.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': file}, ExpiresIn=14400)
         return response
     except Exception as e:
         print(e)
