@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SECRET_KEY = os.environ.get('secret_key')
 SQLALCHEMY_DATABASE_URI = os.environ.get('db_url')
