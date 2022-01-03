@@ -11,21 +11,17 @@ admin = Blueprint('admin', __name__)
 
 @admin.before_request
 def checkAuthentication():
-    if request.headers.get('Authorization'):
-        credentails = parse_authorization_header(
-            request.headers.get('Authorization')
-        )
-        if not credentails:
-            abort(401)
-        if credentails.password and credentails.username is not None:
-            if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
-                pass
-            else:
-                abort(401)
-        else:
-            abort(401)
-    else:
-        abort(401)
+    try:
+        if request.headers.get('Authorization'):
+            credentails = parse_authorization_header(
+                request.headers.get('Authorization')
+            )
+            if credentails.password and credentails.username is not None:
+                if credentails.username != "thrillingwaves@gmail.com" and credentails.password != "9828060173@Python7":
+                    abort(401)
+    except:
+        abort(500)
+            
 
 @admin.get("/admin/getLink/<mid>")
 def get_link(mid):
