@@ -21,7 +21,6 @@ def checkAuthentication():
                     abort(401)
     except:
         abort(500)
-            
 
 @admin.get("/admin/getLink/<mid>")
 def get_link(mid):

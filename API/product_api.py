@@ -75,7 +75,7 @@ def get_Orignals(pagesize, pageno):
 
 @product_api.post('/api/getMovies/<int:pagesize>/<int:pageno>')
 def getMovies(pagesize=12, pageno=1):
-    moviesPages = Movie.query.order_by(Movie.mid.desc()).paginate(pageno, pagesize, True).items
+    moviesPages = Movie.query.filter(Movie.Type != 'Episode').order_by(Movie.mid.desc()).paginate(pageno, pagesize, True).items
     movies = []
     if len(moviesPages) > 0:
         for movie in moviesPages:
@@ -84,6 +84,7 @@ def getMovies(pagesize=12, pageno=1):
                     "mid": movie.mid,
                     "name": movie.name,
                     "image_url":BASE_IMAGE_URL + movie.image_url,
+                    "Type": movie.Type
                 }
             )
         return jsonify({"success": True, 'movies': movies})
