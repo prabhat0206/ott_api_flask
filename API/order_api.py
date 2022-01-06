@@ -147,8 +147,6 @@ def add_membership():
     }
     user = User_table.query.filter_by(uid=uid).first()
     membership = membership.upper()
-    if status != "Succeeded":
-        membership = "FREE"
     if membership not in memberships:
         return jsonify({'success': False})
     if user:
