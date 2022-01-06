@@ -81,7 +81,7 @@ def get_membership():
         if len(user.membership_order) > 0:
             membership = user.membership_order[0]
             temp = get_model_dict(membership)
-            days_left = (temp['valid_till'] - datetime.today()).days
+            days_left = (temp['valid_till'] - datetime.now().date()).days
             if days_left > 0:
                 temp['days_left'] = days_left
                 del temp['payment_id']
