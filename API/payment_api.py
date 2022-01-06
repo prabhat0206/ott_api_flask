@@ -78,7 +78,7 @@ def create_key():
     data = request.get_json()
     amount = int(data['amount'])
     payment = stripe.PaymentIntent.create(
-            amount=amount,
+            amount=amount * 100,
             currency="inr",
             payment_method_types=["card"],
         )
