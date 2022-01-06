@@ -125,13 +125,15 @@ if not path.exists('API/' + DB_NAME):
 
 @auth.verify_token
 def verify_token(token):
-    user_id = token.split(":")[0]
-    password = token.split(":")[1]
-    user = User_table.query.filter_by(uid=user_id).first()
-    if user:
-        if user.password == password:
-            return user.uid
-    return False
+    try:
+        user_id = token.split(":")[0]
+        password = token.split(":")[1]
+        user = User_table.query.filter_by(uid=user_id).first()
+        if user:
+            if user.password == password:
+                return user.uid
+        return False
+    except: return False
 
 
 app.register_blueprint(product_api, url_prefix='/')
