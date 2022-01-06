@@ -8,6 +8,7 @@ from os import path
 import razorpay
 from datetime import date
 import boto3
+import stripe
 from botocore.config import Config
 from .config import S3_KEY, S3_SECRET, S3_BUCKET, S3_LOCATION, S3_REGION
 # from werkzeug.security import check_password_hash
@@ -23,6 +24,10 @@ BASE_IMAGE_URL = ""
 app.config["UPLOAD_IMG"] = UPLOAD_IMG
 db = SQLAlchemy(app)
 
+app.config['STRIPE_PUBLIC_KEY'] = "pk_test_51JefRXSJYX1U1nseRqGj4HZwS0U7xlpD7LuidZ11Z1gg1fDjr315wZuvcn3Kq5mBbrHjOV3yXn29XHgmLXHIfMTF00zLBWN1KE"
+app.config['STRIPE_SECRET_KEY'] = "sk_test_51JefRXSJYX1U1nseahJ4WW80sBTH6clX8W75rzqaCX9Oi9FAsOfshiSS4DH2xhWo2lT9kE0BYrmHqIwFjTAuRmOw00JPCPMYW6"
+
+stripe.api_key = app.config['STRIPE_SECRET_KEY']
 
 s3 = boto3.client(
    "s3",

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, abort
 from .models import User_table, Movie, Web_series
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db, get_model_dict, auth, client
+import stripe
 
 account_api = Blueprint('account_api', __name__)
 
@@ -25,11 +26,12 @@ def register():
             return jsonify({"success": False, 'error': 'Phone number is already registered with other user .'})
         elif "+" not in Ph_number:
             return jsonify({"success": False, 'error': 'Enter phone number with country code'})
-        razorpay_data = {
-            'name': full_name,
-            'contact': Ph_number,
-        }
-        response = client.customer.create(data=razorpay_data)
+        
+        customer_obj = stripe.Customer.create(
+                name=full_name,
+                email=data.get('email'),
+                phone=Ph_number,
+            )
 
         new_user = User_table(
             password=generate_password_hash(
@@ -37,10 +39,12 @@ def register():
             Ph_number=Ph_number,
             DOB=dob,
             Gender=Gender,
+            full_name=full_name,
             membership='Free',
             email=data.get('email'),
-            razorpay_id=response['id']
+            razorpay_id=customer_obj['id']
         )
+
         db.session.add(new_user)
         db.session.commit()
     return jsonify({"success": True, "sha": new_user.password, "user_id": new_user.uid})

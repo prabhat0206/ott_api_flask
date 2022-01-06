@@ -132,7 +132,7 @@ def add_membership():
     membership = data['membership']
     memberships = {
         'GOLD': timedelta(days=365),
-        'SILVER': timedelta(days=30),
+        'SILVER': timedelta(days=60),
         'BRONZE': timedelta(days=30)
     }
 
