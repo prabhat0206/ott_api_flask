@@ -105,6 +105,7 @@ def get_membership():
         return jsonify({'success': False})
 
 
+
 @order_api.route('/api/getorderbycus/', methods=['POST'])
 @order_api.route('/api/getorderbycus', methods=['POST'])
 @auth.login_required()
@@ -130,6 +131,9 @@ def add_membership():
     uid = auth.current_user()
     date = datetime.now()
     membership = data['membership']
+    status = data['status']
+    amount = data['amount']
+    payment_id = data['payment_id']
     memberships = {
         'GOLD': timedelta(days=365),
         'SILVER': timedelta(days=60),
@@ -151,7 +155,10 @@ def add_membership():
             date=date,
             total_price=prices[membership],
             membership=membership,
-            valid_till=date + memberships[membership]
+            valid_till=date + memberships[membership],
+            payment_status=status,
+            amount=amount,
+            payment_id=payment_id
         )
         db.session.add(new_order)
         user.membership = membership

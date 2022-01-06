@@ -21,6 +21,7 @@ class User_table(db.Model):
     membership_order = db.relationship("Order", backref="User", overlaps="order_by,orders")
     razorpay_id = db.Column(db.String, nullable=False)
 
+#payment id method status amount
 
 class Genre(db.Model):
     gid = db.Column(db.Integer, primary_key=True)
@@ -91,6 +92,8 @@ class Order(db.Model):
     total_price = db.Column(db.Integer, nullable=False)
     payment_id = db.Column(db.String)
     membership = db.Column(db.String)
+    amount = db.Column(db.String)
+    payment_status = db.Column(db.String)
 
 
 class Banners(db.Model):

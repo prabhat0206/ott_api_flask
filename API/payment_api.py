@@ -78,10 +78,10 @@ def create_key():
     data = request.get_json()
     amount = int(data['amount'])
     payment = stripe.PaymentIntent.create(
-            amount=amount * 100,
+            amount=amount,
             currency="inr",
             payment_method_types=["card"],
-        )
+    )
     return jsonify({'success': True, 'secretKey': payment["client_secret"]})
 
 
