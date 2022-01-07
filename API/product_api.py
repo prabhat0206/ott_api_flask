@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from .models import *
+from sqlalchemy import or_
 from . import generate_signed_url, get_model_dict, permission_required, BASE_IMAGE_URL, auth
 # import random
 
@@ -156,48 +157,22 @@ def getMovie():
 @product_api.route('/api/searchproduct/<string:word>', methods=['POST'])
 def search_product(word):
     word = str(word)
-    movies = Movie.query.with_entities(
-        Movie.mid,
-        Movie.name,
-        Movie.image_url
-    ).filter(Movie.name.like("%" + word + "%") |
-             Movie.description.like("%" + word + "%") |
-             Movie.Language.like("%" + word + "%") |
-             Movie.Director.like("%" + word + "%") |
-             Movie.genre.like("%" + word + "%") |
-             Movie.Type.like("%" + word + "%"), Movie.Type != 'Episode'
-             ).order_by(Movie.date.desc()).all()
+    movies = Movie.query.filter(or_(Movie.name.contains(word), Movie.genre.contains(word), Movie.description.contains(word), Movie.Director.contains(word), Movie.Language.contains(word))).order_by(Movie.date.desc()).all()
 
-    web_series = Web_series.query.with_entities(
-        Web_series.wsid,
-        Web_series.name,
-        Web_series.image_url
-    ).filter(Web_series.name.like("%" + word + "%") |
-             Web_series.description.like("%" + word + "%") |
-             Web_series.Language.like("%" + word + "%") |
-             Web_series.genre.like("%" + word + "%") |
-             Web_series.Director.like("%" + word + "%")
-             ).order_by(Web_series.date.desc()).all()
+    web_series = Web_series.query.filter(or_(Web_series.name.contains(word), Web_series.Language.contains(word), Web_series.description.contains(word), Web_series.genre.contains(word), Web_series.Director.contains(word))).order_by(Web_series.date.desc()).all()
 
     result_movies = []
     result_web_series = []
     if len(movies) > 0 or len(web_series) > 0:
         for movie in movies:
-            result_movies.append(
-                {
-                    "mid": movie[0],
-                    "name": movie[1],
-                    "image_url":BASE_IMAGE_URL + movie[2]
-                }
-            )
+            if movie.Type != 'Episode':
+                new_movies = get_model_dict(movie)
+                del new_movies['uid']
+                result_movies.append(new_movies)
         for series in web_series:
-            result_web_series.append(
-                {
-                    "wsid": series[0],
-                    "name": series[1],
-                    "image_url":BASE_IMAGE_URL + series[2]
-                }
-            )
+            new_series = get_model_dict(series)
+            del new_series['uid']
+            result_web_series.append(new_series)
         return jsonify({"success": True, 'Movies': result_movies, 'Web_series':result_web_series})
     else:
         return jsonify({"success": False})
