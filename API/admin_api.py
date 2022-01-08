@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, abort, send_file
 from werkzeug.http import parse_authorization_header
 from werkzeug.utils import secure_filename
 from datetime import datetime
+from functools import wraps
 from .models import *
 from . import S3_BUCKET, generate_signed_url, get_model_dict,  BASE_IMAGE_URL, upload_file_to_s3, s3
 import os
@@ -9,26 +10,34 @@ import os
 static_folder = 'static'
 admin = Blueprint('admin', __name__)
 
-@admin.before_request
-def checkAuthentication():
-    try:
+def admin_required(next):
+    @wraps(next)
+    def check_admin(*args, **kwargs):
         if request.headers.get('Authorization'):
             credentails = parse_authorization_header(
                 request.headers.get('Authorization')
             )
             if credentails.password and credentails.username is not None:
-                if credentails.username != "thrillingwaves@gmail.com" and credentails.password != "9828060173@Python7":
+                if credentails.username == "thrillingwaves@gmail.com" and credentails.password == "9828060173@Python7":
+                    return next(*args, **kwargs)
+                else:
                     abort(401)
-    except:
-        abort(500)
+            else:
+                abort(401)
+        else:
+            abort(401)
+    return check_admin
+
 
 @admin.get("/admin/getLink/<mid>")
+@admin_required
 def get_link(mid):
     movie = Movie.query.filter_by(mid=int(mid)).first()
     link = generate_signed_url(movie.q1080p)
     return jsonify({"success": True, "link": link})
 
 @admin.post('/admin/getAllData')
+@admin_required
 def allData():
     movies = Movie.query.filter(Movie.Type != "Episode").all()
     web_series = Web_series.query.all()
@@ -59,6 +68,7 @@ def allData():
 
 @admin.route('/admin/getMovie', methods=['POST'])
 @admin.route('/admin/getMovie/', methods=['POST'])
+@admin_required
 def get_Movie():
     data = request.get_json()
     mid = int(data['mid'])
@@ -67,12 +77,15 @@ def get_Movie():
         result = get_model_dict(movie)
         if movie.q1080p is not None:
             result['file_url'] = generate_signed_url(movie.q1080p)
+        else:
+            result['file_url'] = None
         return jsonify({'success': True, "Movie":result})
     return jsonify({'success': False})
             
 
 
 @admin.post('/admin/getWeb_series')
+@admin_required
 def get_Web_series():
     data = request.get_json()
     wsid = data['wsid']
@@ -96,6 +109,8 @@ def get_Web_series():
                 }
                 if ep.q1080p is not None:
                     new_Episode["file_url"] = generate_signed_url(ep.q1080p)
+                else:
+                    new_Episode['file_url'] = None
                 seasonEpisode['episodes'].append(new_Episode)
                 name_season+=1
             all_details['season'].append(seasonEpisode)
@@ -107,6 +122,7 @@ def get_Web_series():
 
 @admin.route('/admin/addMovie', methods=['POST'])
 @admin.route('/admin/addMovie/', methods=['POST'])
+@admin_required
 def add_Movie():
     data = request.form
     name = data['name']
@@ -147,6 +163,7 @@ def add_Movie():
 
 @admin.route('/admin/editMovie', methods=['POST'])
 @admin.route('/admin/editMovie/', methods=['POST'])
+@admin_required
 def edit_Movie():
     data = request.form
     mid = int(data['mid'])
@@ -185,6 +202,7 @@ def edit_Movie():
 
 @admin.route('/admin/deleteMovie', methods=['POST'])
 @admin.route('/admin/deleteMovie/', methods=['POST'])
+@admin_required
 def delete_Movie():
     try:
         data = request.get_json()
@@ -205,6 +223,7 @@ def delete_Movie():
 
 
 @admin.post('/admin/add_Web_series')
+@admin_required
 def add_Web_series():
     try:
         data = request.form
@@ -240,6 +259,7 @@ def add_Web_series():
 
 @admin.route('/admin/edit_Web_series', methods=['POST'])
 @admin.route('/admin/edit_Web_series/', methods=['POST'])
+@admin_required
 def edit_Web_series():
     data = request.form
     name = data['name']
@@ -272,6 +292,7 @@ def edit_Web_series():
 
 @admin.route('/admin/delete_Web_series', methods=['POST'])
 @admin.route('/admin/delete_Web_series/', methods=['POST'])
+@admin_required
 def delete_Web_series():
     try:
         data = request.get_json()
@@ -297,6 +318,7 @@ def delete_Web_series():
 
 @admin.route('/admin/add_Season', methods=['POST'])
 @admin.route('/admin/add_Season/', methods=['POST'])
+@admin_required
 def add_Season():
     data = request.get_json()
     name = data['name']
@@ -321,6 +343,7 @@ def add_Season():
 
 # pyThOn($)78
 @admin.post('/admin/edit_Season')
+@admin_required
 def edit_Season():
         data = request.get_json()
         name = data['name']
@@ -336,6 +359,7 @@ def edit_Season():
 
 @admin.route('/admin/delete_Season', methods=['POST'])
 @admin.route('/admin/delete_Season/', methods=['POST'])
+@admin_required
 def delete_Season():
     try:
         data = request.get_json()
@@ -359,6 +383,7 @@ def delete_Season():
 
 @admin.route('/admin/add_Episode', methods=['POST'])
 @admin.route('/admin/add_Episode/', methods=['POST'])
+@admin_required
 def add_Episode():
     data = request.form
     name = data['name']
@@ -390,6 +415,7 @@ def add_Episode():
 
 
 @admin.post('/admin/edit_Episode')
+@admin_required
 def edit_Episode():
     data = request.form
     mid = data.get('mid')
@@ -421,6 +447,7 @@ def edit_Episode():
         abort(422)
 
 @admin.post('/admin/delete_Episode')
+@admin_required
 def delete_Episode():
     try:
         data = request.get_json()
@@ -442,6 +469,7 @@ def delete_Episode():
 
 @admin.route('/admin/allorders', methods=['POST'])
 @admin.route('/admin/allorders/', methods=['POST'])
+@admin_required
 def all_orders():
     try:
         orders = Order.query.order_by(Order.date.desc()).all()
@@ -464,6 +492,7 @@ def all_orders():
 
 @admin.route('/admin/allusers', methods=['POST'])
 @admin.route('/admin/allusers/', methods=['POST'])
+@admin_required
 def all_users():
     try:
         users = User_table.query.order_by(User_table.uid.desc()).all()
@@ -480,6 +509,7 @@ def all_users():
 
 @admin.route('/admin/addimage', methods=['POST'])
 @admin.route('/admin/addimage/', methods=['POST'])
+@admin_required
 def addimage():
     file = request.files['file']
     # if not file:
