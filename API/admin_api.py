@@ -478,7 +478,7 @@ def all_orders():
             for order in orders:
                 user = User_table.query \
                     .with_entities(User_table.full_name) \
-                    .filter_by(customer_id=order.uid).first()
+                    .filter_by(uid=order.uid).first()
                 temp_order = get_model_dict(order)
                 temp_order['Buyers_name'] = user.full_name
                 temp_order['Total_price'] = order.total_price
@@ -500,6 +500,7 @@ def all_users():
             all_users = []
             for user in users:
                 temp_user = get_model_dict(user)
+                del temp_user['password']
                 if len(user.membership_order) > 0:
                     membership = user.membership_order[0]
                     temp = get_model_dict(membership)
