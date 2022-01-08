@@ -65,9 +65,44 @@ def get_Movie():
     movie = Movie.query.filter_by(mid=mid).first()
     if movie:
         result = get_model_dict(movie)
+        if movie.q1080p is not None:
+            result['file_url'] = generate_signed_url(movie.q1080p)
         return jsonify({'success': True, "Movie":result})
     return jsonify({'success': False})
             
+
+
+@admin.post('/admin/getWeb_series')
+def get_Web_series():
+    data = request.get_json()
+    wsid = data['wsid']
+    ws = Web_series.query.filter_by(wsid=wsid).first()
+    if ws:
+        all_details = get_model_dict(ws)
+        all_details['season'] = []
+        for season in ws.sid:
+            seasonEpisode = {}
+            seasonEpisode['sid'] = season.sid
+            seasonEpisode['name'] = season.name
+            seasonEpisode['episodes'] = []
+            name_season = 1
+            for ep in season.mid:
+                new_Episode = {
+                    'mid': ep.mid,
+                    'name': ep.name,
+                    'image_url': BASE_IMAGE_URL + ep.image_url,
+                    "type": ep.Type,
+                    
+                }
+                if ep.q1080p is not None:
+                    new_Episode["file_url"] = generate_signed_url(ep.q1080p)
+                seasonEpisode['episodes'].append(new_Episode)
+                name_season+=1
+            all_details['season'].append(seasonEpisode)
+        return jsonify({"success": True, 'WebSeries': all_details})
+    else:
+        return jsonify({'success': False})
+
 
 
 @admin.route('/admin/addMovie', methods=['POST'])
