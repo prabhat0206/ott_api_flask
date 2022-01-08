@@ -500,6 +500,29 @@ def all_users():
             all_users = []
             for user in users:
                 temp_user = get_model_dict(user)
+                if len(user.membership_order) > 0:
+                    membership = user.membership_order[0]
+                    temp = get_model_dict(membership)
+                    days_left = (temp['valid_till'] - datetime.now().date()).days
+                    if days_left > 0:
+                        temp['days_left'] = days_left
+                        del temp['payment_id']
+                    else:
+                        user.membership_order = []
+                        user.membership = 'FREE'
+                        db.session.commit()
+                        temp = {
+                            "days_left": 0,
+                            "membership": "FREE",
+                            "total_price": 0
+                        }
+                else:
+                    temp = {
+                        "days_left": 0,
+                        "membership": "FREE",
+                        "total_price": 0
+                    }
+                temp_user['membership'] = temp
                 all_users.append(temp_user)
             return jsonify({'success': True, "users": all_users}), 200
         else:
