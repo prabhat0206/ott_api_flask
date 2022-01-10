@@ -183,4 +183,8 @@ def search_product(word):
 @permission_required()
 def send_file_mk(mid):
     movie = Movie.query.filter_by(mid=int(mid)).first()
-    return jsonify({"success": True, 'link': generate_signed_url(movie.q1080p)})
+    link = generate_signed_url(movie.q1080p)
+    if link:
+        return jsonify({"success": True, 'link': link})
+    else:
+        return jsonify({"success": False})
