@@ -10,6 +10,7 @@ from datetime import date
 import boto3
 import stripe
 from botocore.config import Config
+from werkzeug.security import generate_password_hash
 from .config import S3_KEY, S3_SECRET, S3_BUCKET, S3_LOCATION, S3_REGION, STRIPE_PUBLIC_KEY, STRIPE_SECRET_KEY
 # from werkzeug.security import check_password_hash
 
@@ -74,7 +75,7 @@ def permission_required():
 
 
 def upload_file_to_s3(file, acl=False):
-    better_filename = file.filename.replace(".", "").replace(" ", "_")
+    better_filename = generate_password_hash(file.filename.replace(".", "").replace(" ", "_"))
     try:
         if acl:
             s3.upload_fileobj(
