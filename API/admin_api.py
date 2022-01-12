@@ -119,6 +119,23 @@ def get_Web_series():
         return jsonify({'success': False})
 
 
+@admin.post('/admin/change_trending_movie')
+def change_trending():
+    data = request.get_json()
+    movie = Movie.query.filter_by(mid=int(data['mid'])).first()
+    movie.trending = data['status']
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@admin.post('/admin/change_trending_ws')
+def change_trending():
+    data = request.get_json()
+    movie = Web_series.query.filter_by(mid=int(data['wsid'])).first()
+    movie.trending = data['status']
+    db.session.commit()
+    return jsonify({'success': True})
+
 
 @admin.route('/admin/addMovie', methods=['POST'])
 @admin.route('/admin/addMovie/', methods=['POST'])
@@ -173,7 +190,7 @@ def edit_Movie():
     Director = data['Director']
     short_description = data['short_description']
     genre = data['Genre']
-    orignal = data['orignal']
+    orignal = int(data['orignal'])
     movie = Movie.query.filter_by(mid=mid).first()
     if movie:
         movie.name = name
