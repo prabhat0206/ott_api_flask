@@ -169,7 +169,7 @@ def add_Movie():
     Type='Movie'
     image = request.files['image']
     genre = data['Genre']
-    orignal = data['orignal']
+    orignal = int(data['orignal'])
     movie = Movie(
         name=name,
         date=date,
