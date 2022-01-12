@@ -137,24 +137,6 @@ def get_Web_series():
         return jsonify({'success': False})
 
 
-@admin.post('/admin/change_trending_movie')
-def change_trending():
-    data = request.get_json()
-    movie = Movie.query.filter_by(mid=int(data['mid'])).first()
-    movie.trending = data['status']
-    db.session.commit()
-    return jsonify({'success': True})
-
-
-@admin.post('/admin/change_trending_ws')
-def change_trending():
-    data = request.get_json()
-    movie = Web_series.query.filter_by(mid=int(data['wsid'])).first()
-    movie.trending = data['status']
-    db.session.commit()
-    return jsonify({'success': True})
-
-
 @admin.route('/admin/addMovie', methods=['POST'])
 @admin.route('/admin/addMovie/', methods=['POST'])
 @admin_required
