@@ -40,7 +40,7 @@ def register():
             DOB=dob,
             Gender=Gender,
             full_name=full_name,
-            membership='Free',
+            membership='FREE',
             email=data.get('email'),
             razorpay_id=customer_obj['id']
         )
