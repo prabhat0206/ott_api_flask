@@ -36,7 +36,9 @@ def get_link(mid):
     link = generate_signed_url(movie.q1080p)
     return jsonify({"success": True, "link": link})
 
+
 @admin.post('/admin/change_trending_movie')
+@admin_required
 def change_trending_movie():
     data = request.get_json()
     movie = Movie.query.filter_by(mid=int(data['mid'])).first()
@@ -46,6 +48,7 @@ def change_trending_movie():
 
 
 @admin.post('/admin/change_trending_ws')
+@admin_required
 def change_trending_ws():
     data = request.get_json()
     movie = Web_series.query.filter_by(mid=int(data['wsid'])).first()

@@ -75,7 +75,7 @@ def permission_required():
 
 
 def upload_file_to_s3(file, acl=False):
-    better_filename = generate_password_hash(file.filename.replace(".", "").replace(" ", "_"))
+    better_filename = file.filename.replace(" ", "_")
     try:
         if acl:
             s3.upload_fileobj(
