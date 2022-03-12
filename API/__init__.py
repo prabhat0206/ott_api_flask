@@ -6,7 +6,7 @@ from functools import wraps
 from flask_cors import CORS
 from os import path
 import razorpay
-from datetime import date
+from datetime import date, datetime
 import boto3
 import stripe
 from botocore.config import Config
@@ -135,6 +135,9 @@ def verify_token(token):
                 return user.uid
         return False
     except: return False
+
+
+init_date = datetime.strptime("2022-03-12", "%Y-%m-%d").date()
 
 
 app.register_blueprint(product_api, url_prefix='/')

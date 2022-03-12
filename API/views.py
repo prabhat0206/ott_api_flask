@@ -6,6 +6,11 @@ views = Blueprint('views', __name__)
 
 # category does not exist in models
 
+@views.get('/')
+def check():
+    return jsonify({"success": True})
+
+
 @views.route('/api/getbannerbyname/bannername/<string:banner_name>/', methods=['POST'])
 @views.route('/api/getbannerbyname/bannername/<string:banner_name>', methods=['POST'])
 def banner_by_name(banner_name):
