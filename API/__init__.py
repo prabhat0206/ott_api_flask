@@ -117,6 +117,7 @@ from .account_api import account_api
 from .product_api import product_api
 from .order_api import order_api
 from .admin_api import admin
+from .views import views
 from .payment_api import payment_api
 from .models import *
 
@@ -143,5 +144,6 @@ init_date = datetime.strptime("2022-03-12", "%Y-%m-%d").date()
 app.register_blueprint(product_api, url_prefix='/')
 app.register_blueprint(payment_api, url_prefix='/')
 app.register_blueprint(admin, url_prefix='/')
+app.register_blueprint(views, url_prefix='/')
 app.register_blueprint(account_api, url_prefix='/')
 app.register_blueprint(order_api, url_prefix='/')
