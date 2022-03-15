@@ -10,7 +10,7 @@ def backup_data():
     threading.Timer(15, backup_data).start()
     last_date = BackupDate.query.filter_by(id=1).first()
     if last_date.last_date < date.today():
-        conn = sqlite3.connect('python7.db')  
+        conn = sqlite3.connect('../python7.db')  
         with io.open(r'backupdatabase_dump.sql', 'w') as p: 
             for line in conn.iterdump():
                 p.write('%s\n' % line)
