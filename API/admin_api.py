@@ -6,7 +6,6 @@ from functools import wraps
 from .models import *
 from . import S3_BUCKET, generate_signed_url, get_model_dict,  BASE_IMAGE_URL, upload_file_to_s3, s3
 import os
-
 static_folder = 'static'
 admin = Blueprint('admin', __name__)
 
@@ -146,7 +145,7 @@ def get_Web_series():
 def add_Movie():
     data = request.form
     name = data['name']
-    date = datetime.now()
+    date = datetime.datetime.now()
     description = data['description']
     Language = data['Language']
     Director = data['Director']
@@ -248,7 +247,7 @@ def add_Web_series():
     try:
         data = request.form
         name = data['name']
-        date = datetime.now()
+        date = datetime.datetime.now()
         short_description = data['short_description']
         description = data['description']
         Language = data['Language']
@@ -343,7 +342,7 @@ def add_Season():
     data = request.get_json()
     name = data['name']
     wsid = data['wsid']
-    date = datetime.now()
+    date = datetime.datetime.now()
     web_series = Web_series.query.filter_by(wsid=wsid).first()
     if web_series:
         season = Season(
@@ -524,7 +523,7 @@ def all_users():
                 if len(user.membership_order) > 0:
                     membership = user.membership_order[0]
                     temp = get_model_dict(membership)
-                    days_left = (temp['valid_till'] - datetime.now().date()).days
+                    days_left = (temp['valid_till'] - datetime.datetime.now().date()).days
                     if days_left > 0:
                         temp['days_left'] = days_left
                         del temp['payment_id']
