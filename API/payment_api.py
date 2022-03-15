@@ -3,10 +3,13 @@ from . import auth
 from .models import *
 import razorpay
 import stripe
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 payment_api = Blueprint('payment_api', __name__)
-client = razorpay.Client(auth=("rzp_live_wy4RfCToXpOWK1", "XtUH0I5fWryaQU2KiOo29eeG"))
+client = razorpay.Client(auth=(os.environ.get("rz_key"), os.environ.get("rz_secret_key")))
 
 
 @payment_api.get('/api/create_key')
