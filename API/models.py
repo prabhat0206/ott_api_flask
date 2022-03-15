@@ -1,5 +1,5 @@
 from . import db
-
+import datetime
 
 class User_table(db.Model):
     uid = db.Column(db.Integer, primary_key=True)
@@ -16,7 +16,7 @@ class User_table(db.Model):
     watchlist = db.relationship("Movie", backref="in_watchlist_of")
     watchlist_web = db.relationship("Web_series", backref="in_watchlist")
     History = db.relationship("Movie", backref="History_of", overlaps="in_watchlist_of,watchlist")
-    orders = db.relationship("Order", backref="order_by")
+    orders = db.relationship("Order", backref="orde")
     membership = db.Column(db.String, nullable=False, default="FREE")
     membership_order = db.relationship("Order", backref="User", overlaps="order_by,orders")
     razorpay_id = db.Column(db.String, nullable=False)
@@ -100,3 +100,8 @@ class Banners(db.Model):
     bid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
     b_url = db.Column(db.String)
+
+
+class BackupDate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    last_date = db.Column(db.Date, default=datetime.datetime.strptime("2022-01-01", "%Y-%m-%d").date())

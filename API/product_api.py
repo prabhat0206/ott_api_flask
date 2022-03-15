@@ -6,14 +6,11 @@ from . import generate_signed_url, get_model_dict, permission_required, BASE_IMA
 
 product_api = Blueprint('product_api', __name__)
 
-
 @product_api.route('/api/getLatest/<int:pagesize>/<int:pageno>/', methods=['POST'])
 @product_api.route('/api/getLatest/<int:pagesize>/<int:pageno>', methods=['POST'])
 def get_Latest(pagesize, pageno):
     movies = Movie.query.order_by(Movie.date.desc()).filter(Movie.Type != 'Episode').paginate( pageno,pagesize, False).items
-    # movies = db.session.execute(movies).all()
     web_series = Web_series.query.order_by(Web_series.wsid.desc()).paginate( pageno,pagesize, True).items
-    # web_series = db.session.execute(web_series).all()
     movies_data = []
     web_series_data = []
     trending = []

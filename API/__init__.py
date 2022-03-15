@@ -6,7 +6,7 @@ from functools import wraps
 from flask_cors import CORS
 from os import path
 import razorpay
-from datetime import date, datetime
+from datetime import date
 import boto3
 import stripe
 from botocore.config import Config
@@ -74,16 +74,16 @@ def permission_required():
     return decorator
 
 
-def upload_file_to_s3(file, acl=False):
-    better_filename = file.filename.replace(" ", "_")
+def upload_file_to_s3(file, acl=False, filename=None):
+    better_filename = filename if filename else file.filename.replace(" ", "_")
     try:
         if acl:
             s3.upload_fileobj(
-                file,
+                file if filename is None else file[1],
                 S3_BUCKET,
                 better_filename,
                 ExtraArgs={
-                    "ContentType": file.content_type
+                    "ContentType": file.content_type if filename is None else file[2]
                 }
             )
             return better_filename
@@ -120,6 +120,7 @@ from .admin_api import admin
 from .views import views
 from .payment_api import payment_api
 from .models import *
+from .backup import backup_data
 
 if not path.exists('API/' + DB_NAME):
     db.create_all(app=app)
@@ -137,9 +138,7 @@ def verify_token(token):
         return False
     except: return False
 
-
-init_date = datetime.strptime("2022-03-12", "%Y-%m-%d").date()
-
+backup_data()
 
 app.register_blueprint(product_api, url_prefix='/')
 app.register_blueprint(payment_api, url_prefix='/')

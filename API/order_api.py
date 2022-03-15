@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, send_file, url_for
 from .models import *
 from . import db, get_model_dict, auth, permission_required
 from datetime import datetime, timedelta
+from .payment_api import client
 
 
 order_api = Blueprint('order_api', __name__)
@@ -134,6 +135,16 @@ def add_membership():
     status = data['status']
     amount = data['amount']
     payment_id = data['payment_id']
+    order_id = data['order_id']
+    signature = data['signature']
+    orderss = {
+        'razorpay_order_id': order_id,
+        'razorpay_payment_id': payment_id,
+        'razorpay_signature': signature
+    }
+    if client.utility.verify_payment_signature(orderss) == False:
+        return jsonify({'success': False, "Error": "Invalid payment signature"})
+    
     memberships = {
         'GOLD': timedelta(days=365),
         'SILVER': timedelta(days=60),
@@ -145,6 +156,7 @@ def add_membership():
         'SILVER': 249,
         'BRONZE': 199
     }
+    
     user = User_table.query.filter_by(uid=uid).first()
     membership = membership.upper()
     if membership not in memberships:

@@ -23,21 +23,21 @@ def banner_by_name(banner_name):
         return jsonify({'success': False})
 
 
-@views.route('/api/getCategories/', methods=['POST'])
-@views.route('/api/getCategories', methods=['POST'])
-def get_Categories():
-    all_categories = Category.query.with_entities(Category.name, Category.cid, Category.image_url) 
-    all_categories = db.session.execute(all_categories).fetchall()
-    categories = []
-    if len(all_categories) > 0:
-        for category in all_categories:
-            categories.append(
-                {
-                    'cid': category[1],
-                    'name': category[0],
-                    'url': category[2]
-                }
-            )
-        return jsonify({'success': True, 'Categories': categories})
-    else:
-        return jsonify({'success': False})
+# @views.route('/api/getCategories/', methods=['POST'])
+# @views.route('/api/getCategories', methods=['POST'])
+# def get_Categories():
+#     all_categories = Category.query.with_entities(Category.name, Category.cid, Category.image_url) 
+#     all_categories = db.session.execute(all_categories).fetchall()
+#     categories = []
+#     if len(all_categories) > 0:
+#         for category in all_categories:
+#             categories.append(
+#                 {
+#                     'cid': category[1],
+#                     'name': category[0],
+#                     'url': category[2]
+#                 }
+#             )
+#         return jsonify({'success': True, 'Categories': categories})
+#     else:
+#         return jsonify({'success': False})

@@ -1,39 +1,32 @@
 from flask import Blueprint, request, jsonify, abort
 from . import auth
 from .models import *
+import razorpay
 import stripe
 
+
 payment_api = Blueprint('payment_api', __name__)
+client = razorpay.Client(auth=("rzp_live_wy4RfCToXpOWK1", "XtUH0I5fWryaQU2KiOo29eeG"))
 
 
-# @payment_api.post("/api/make_payment")
-# @auth.login_required()
-# def make_payment():
-#     try:
-#         data = request.get_json()
-#         order_id = client.order.create(data={
-#             "amount": int(data["amount"]) * 100,
-#             "currency": "INR",
-#             "receipt": "#1receipt",
-#             "notes": {
-#                 "note1": "payment"
-#             }
-#         })
-#         return jsonify({'success': True, "order_id": order_id["id"]})
-#     except:
-#         abort(500)
+@payment_api.get('/api/create_key')
+@auth.login_required()
+def get_order_id():
+    try:
+        data = request.args
+        order = client.order.create({
+            "amount": int(data["amount"]) * 100,
+            "currency": "INR",
+            "receipt": "#1receipt",
+            "notes": {
+                "note1": "payment"
+            }
+        })
+        return {'success': True, "order_id": order['id']}
+    except:
+        abort(403)
 
-# @payment_api.post("/api/verify_order")
-# def verify_order():
-#     try:
-#         data = request.get_json()
-#         payment = client.order.payments(data['order_id'])
-#         print(payment)
-#         return jsonify({"success": True, "data": payment})
-#     except:
-#         abort(500)
 
-# @payment_api.route('/api/addcard/', methods=['POST'])
 @payment_api.post('/api/addcard')
 @auth.login_required()
 def add_card():
@@ -72,17 +65,17 @@ def add_card():
         return jsonify({'success': False, 'error': e.user_message})
 
 
-@payment_api.post('/api/create_key')
-@auth.login_required()
-def create_key():
-    data = request.get_json()
-    amount = int(data['amount'])
-    payment = stripe.PaymentIntent.create(
-            amount=amount,
-            currency="inr",
-            payment_method_types=["card"],
-    )
-    return jsonify({'success': True, 'secretKey': payment["client_secret"]})
+# @payment_api.post('/api/create_key')
+# @auth.login_required()
+# def create_key():
+#     data = request.get_json()
+#     amount = int(data['amount'])
+#     payment = stripe.PaymentIntent.create(
+#             amount=amount,
+#             currency="inr",
+#             payment_method_types=["card"],
+#     )
+#     return jsonify({'success': True, 'secretKey': payment["client_secret"]})
 
 
 @payment_api.route('/api/make_payment', methods=['POST'])
