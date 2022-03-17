@@ -1,3 +1,4 @@
+from email.headerregistry import ContentTypeHeader
 from flask import Flask, abort
 from flask_httpauth import HTTPTokenAuth
 from flask_sqlalchemy import SQLAlchemy
@@ -111,6 +112,17 @@ def generate_signed_url(file):
     except Exception as e:
         print(e)
 
+
+def generate_signed_url_put(key):
+    try:
+        response = s3.generate_presigned_url('put_object',\
+             Params={
+                 "Bucket": S3_BUCKET,
+                 "Key": key,
+             }, ExpiresIn=14400)
+        return response
+    except Exception as e:
+        print(e)
 
 
 from .account_api import account_api

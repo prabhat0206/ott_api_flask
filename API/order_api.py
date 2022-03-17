@@ -115,7 +115,7 @@ def get_order_by_cus():
     user = User_table.query.filter_by(uid=uid).first()
     if user:
         orders = []
-        for order in user.orders:
+        for order in user.membership_order:
             temp_order = get_model_dict(order)
             del temp_order['payment_id']
             orders.append(temp_order)

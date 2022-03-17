@@ -4,10 +4,11 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from functools import wraps
 from .models import *
-from . import S3_BUCKET, generate_signed_url, get_model_dict,  BASE_IMAGE_URL, upload_file_to_s3, s3
+from . import S3_BUCKET, generate_signed_url, get_model_dict,  BASE_IMAGE_URL, upload_file_to_s3, s3, generate_signed_url_put
 import os
 static_folder = 'static'
 admin = Blueprint('admin', __name__)
+
 
 def admin_required(next):
     @wraps(next)
@@ -26,6 +27,12 @@ def admin_required(next):
         else:
             abort(401)
     return check_admin
+
+
+@admin.post('/admin/login')
+def login():
+    credentails = request.get_json()
+    return {"Success": True if credentails['username'] == "thrillingwaves@gmail.com" and credentails['password'] == "9828060173@Python7" else False}
 
 
 @admin.get("/admin/getLink/<mid>")
@@ -79,11 +86,10 @@ def allData():
                     "name": series.name,
                     "image_url": BASE_IMAGE_URL + series.image_url,
                 }
-            ) 
-        return jsonify({"success": True, 'Movies':movies_data, "Web_Series": web_series_data})
+            )
+        return jsonify({"success": True, 'Movies': movies_data, "Web_Series": web_series_data})
     else:
         return jsonify({"success": False})
-            
 
 
 @admin.route('/admin/getMovie', methods=['POST'])
@@ -99,9 +105,8 @@ def get_Movie():
             result['file_url'] = generate_signed_url(movie.q1080p)
         else:
             result['file_url'] = None
-        return jsonify({'success': True, "Movie":result})
+        return jsonify({'success': True, "Movie": result})
     return jsonify({'success': False})
-            
 
 
 @admin.post('/admin/getWeb_series')
@@ -123,20 +128,26 @@ def get_Web_series():
                 new_Episode = {
                     'mid': ep.mid,
                     'name': ep.name,
-                    'image_url': BASE_IMAGE_URL + ep.image_url,
+                    'image_url': ep.image_url,
                     "type": ep.Type,
-                    
+
                 }
                 if ep.q1080p is not None:
                     new_Episode["file_url"] = generate_signed_url(ep.q1080p)
                 else:
                     new_Episode['file_url'] = None
                 seasonEpisode['episodes'].append(new_Episode)
-                name_season+=1
+                name_season += 1
             all_details['season'].append(seasonEpisode)
         return jsonify({"success": True, 'WebSeries': all_details})
     else:
         return jsonify({'success': False})
+
+
+@admin.get('/admin/aws_url/<key>')
+@admin_required
+def get_aws_url(key):
+    return jsonify({'success': True, "url": generate_signed_url_put(key)})
 
 
 @admin.route('/admin/addMovie', methods=['POST'])
@@ -150,7 +161,7 @@ def add_Movie():
     Language = data['Language']
     Director = data['Director']
     short_description = data['short_description']
-    Type='Movie'
+    Type = 'Movie'
     image = request.files['image']
     genre = data['Genre']
     orignal = int(data['orignal'])
@@ -168,16 +179,11 @@ def add_Movie():
     )
     db.session.add(movie)
     # if 'q1080p' in request.files:
-    q1080p = request.files['q1080p']
+    q1080p = request.form['q1080p']
     if q1080p:
-        filename = secure_filename(q1080p.filename)
-        if "." not in filename:
-            return jsonify({'success': True, 'error': "File Extension is not valid"})
-        filename = str(movie.mid) + "1080p." + filename
-        movie.q1080p = upload_file_to_s3(q1080p, True)
+        movie.q1080p = q1080p
     db.session.commit()
     return jsonify({'success': True, 'mid': movie.mid}), 200
-            
 
 
 @admin.route('/admin/editMovie', methods=['POST'])
@@ -202,21 +208,20 @@ def edit_Movie():
         movie.Director = Director
         movie.genre = genre
         movie.orignal = orignal
-        if 'q1080p' in request.files:
-            q1080p = request.files['q1080p']
+
+        if 'image' in request.files:
+            movie.image_url = upload_file_to_s3(request.files['image'])
+    
+        if 'q1080p' in request.form:
+            q1080p = request.form['q1080p']
             if q1080p:
-                filename = secure_filename(q1080p.filename)
-                if "." not in filename:
-                    return jsonify({'success': True, 'error': "File Extension is not valid"})
-                filename = str(movie.mid) + "1080p." + filename
                 s3.delete_object(Bucket=S3_BUCKET, Key=movie.q1080p)
-                movie.q1080p = upload_file_to_s3(q1080p, True)
+                movie.q1080p = q1080p
 
         db.session.commit()
         return jsonify({'success': True}), 200
     else:
         abort(422)
-            
 
 
 @admin.route('/admin/deleteMovie', methods=['POST'])
@@ -238,7 +243,6 @@ def delete_Movie():
             abort(422)
     except:
         abort(422)
-            
 
 
 @admin.post('/admin/add_Web_series')
@@ -266,11 +270,11 @@ def add_Web_series():
             genre=genre,
             orignal=orignal
         )
-        
+
         db.session.add(web_series)
         db.session.commit()
-        return jsonify({'success': True, 'wsid':web_series.wsid}), 200
-            
+        return jsonify({'success': True, 'wsid': web_series.wsid}), 200
+
     except Exception as e:
         print(e, "here")
         return jsonify({'success': True})
@@ -306,7 +310,6 @@ def edit_Web_series():
         return jsonify({'success': True}), 200
     else:
         abort(422)
-            
 
 
 @admin.route('/admin/delete_Web_series', methods=['POST'])
@@ -358,22 +361,22 @@ def add_Season():
         return jsonify({'success': True, 'sid': season.sid}), 200
     else:
         abort(422)
-            
+
 
 # pyThOn($)78
 @admin.post('/admin/edit_Season')
 @admin_required
 def edit_Season():
-        data = request.get_json()
-        name = data['name']
-        sid = data['sid']
-        season = Season.query.filter_by(sid=sid).first()
-        if season:
-            season.name = name
-            db.session.commit()
-            return jsonify({'success': True}), 200
-        else:
-            abort(422)
+    data = request.get_json()
+    name = data['name']
+    sid = data['sid']
+    season = Season.query.filter_by(sid=sid).first()
+    if season:
+        season.name = name
+        db.session.commit()
+        return jsonify({'success': True}), 200
+    else:
+        abort(422)
 
 
 @admin.route('/admin/delete_Season', methods=['POST'])
@@ -406,7 +409,7 @@ def delete_Season():
 def add_Episode():
     data = request.form
     name = data['name']
-    Type='Episode'
+    Type = 'Episode'
     sid = data['sid']
     season = Season.query.filter_by(sid=sid).first()
     if season:
@@ -419,14 +422,10 @@ def add_Episode():
         if 'image' in request.files:
             image_url = request.files['image']
             movie.image_url = upload_file_to_s3(image_url)
-        if 'q1080p' in request.files:
-            q1080p = request.files['q1080p']
+        if 'q1080p' in request.form:
+            q1080p = request.form['q1080p']
             if q1080p:
-                filename = secure_filename(q1080p.filename)
-                if "." not in filename:
-                    return jsonify({'success': True, 'error': "File Extension is not valid"})
-                filename = str(movie.mid) + "1080p." + filename
-                movie.q1080p = upload_file_to_s3(q1080p, True)
+                movie.q1080p = q1080p
         db.session.commit()
         return jsonify({'success': True, 'mid': movie.mid}), 200
     else:
@@ -439,31 +438,25 @@ def edit_Episode():
     data = request.form
     mid = data.get('mid')
     name = data['name']
-    Type='Episode'
     sid = data['sid']
     season = Season.query.filter_by(sid=sid).first()
     movie = Movie.query.filter_by(mid=mid).first()
     if season:
-        movie.name=name,
-        movie.Type=Type,
-        movie.sid=sid
+        movie.name = name
         if 'image' in request.files:
-            image_url = request.files['image'] or None
+            image_url = request.files['image']
             if image_url:
-                movie.image_url=upload_file_to_s3(image_url),
-        if 'q1080p' in request.files:
-            q1080p = request.files['q1080p']
+                movie.image_url = upload_file_to_s3(image_url)
+        if 'q1080p' in request.form:
+            q1080p = request.form['q1080p']
             if q1080p:
-                filename = secure_filename(q1080p.filename)
-                if "." not in filename:
-                    return jsonify({'success': True, 'error': "File Extension is not valid"})
-                filename = str(movie.mid) + "1080p." + filename
                 s3.delete_object(Bucket=S3_BUCKET, Key=movie.q1080p)
-                movie.q1080p = upload_file_to_s3(q1080p, True)
+                movie.q1080p = q1080p
         db.session.commit()
         return jsonify({'success': True, 'mid': movie.mid}), 200
     else:
         abort(422)
+
 
 @admin.post('/admin/delete_Episode')
 @admin_required
@@ -523,7 +516,8 @@ def all_users():
                 if len(user.membership_order) > 0:
                     membership = user.membership_order[0]
                     temp = get_model_dict(membership)
-                    days_left = (temp['valid_till'] - datetime.datetime.now().date()).days
+                    days_left = (temp['valid_till'] -
+                                 datetime.datetime.now().date()).days
                     if days_left > 0:
                         temp['days_left'] = days_left
                         del temp['payment_id']
@@ -550,6 +544,7 @@ def all_users():
     except:
         abort(422)
 
+
 @admin.route('/admin/addimage', methods=['POST'])
 @admin.route('/admin/addimage/', methods=['POST'])
 @admin_required
@@ -565,7 +560,6 @@ def addimage():
     # return jsonify({'success': True, 'url': url_for('static', filename=filename, _external=True)}), 200
     output = upload_file_to_s3(file)
     return jsonify({"success": True, "url": output})
-            
 
 
 def filename_finder(name):
