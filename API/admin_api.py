@@ -57,7 +57,7 @@ def change_trending_movie():
 @admin_required
 def change_trending_ws():
     data = request.get_json()
-    movie = Web_series.query.filter_by(mid=int(data['wsid'])).first()
+    movie = Web_series.query.filter_by(wsid=int(data['wsid'])).first()
     movie.trending = data['status']
     db.session.commit()
     return jsonify({'success': True})
