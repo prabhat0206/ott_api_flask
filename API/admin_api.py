@@ -291,9 +291,9 @@ def edit_Web_series():
     Language = data['Language']
     Director = data['Director']
     genre = data['Genre']
-    wsid = data['wsid']
+    wsid = int(data['wsid'])
     orignal = data['orignal']
-    web_series = Web_series.query.filter_by(wsid).first()
+    web_series = Web_series.query.filter_by(wsid=wsid).first()
     if web_series:
         web_series.name = name
         web_series.short_description = short_description
